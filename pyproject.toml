@@ -1,0 +1,27 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "runtoolsio-runcli"
+authors = [{name = "Stan Svec", email = "dev@stansvec.com"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = ["License :: OSI Approved :: MIT License"]
+requires-python = ">=3.10"
+dynamic = ["version", "description"]
+dependencies = [
+
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.flit.module]
+name = "runtoolsio.runcli"
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+
+[project.urls]
+Home = "https://github.com/runtoolsio/runcli"
