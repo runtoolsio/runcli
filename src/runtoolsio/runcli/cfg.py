@@ -163,7 +163,7 @@ def copy_default_config_to_search_path(overwrite: bool):
     cfg_to_copy = paths.default_config_file_path()
     # Copy to first dir in search path
     # TODO Specify where to copy the file - do not use XDG search path
-    copy_to = paths.taro_config_file_search_path(exclude_cwd=True)[0] / paths.CONFIG_FILE
+    copy_to = paths.runtools_config_file_search_path(exclude_cwd=True)[0] / paths.CONFIG_FILE
     try:
         util.copy_resource(cfg_to_copy, copy_to, overwrite)
         return copy_to
