@@ -1,6 +1,6 @@
 """
-This module is used for configuring the `runtoolsio` logger. The convention is to use this logger as a parent logger
-in all runtoolsio libraries, plugins, and related components. In doing so, all logging related to runtoolsio is unified
+This module is used for configuring the `runtools` logger. The convention is to use this logger as a parent logger
+in all runtools libraries, plugins, and related components. In doing so, all logging related to runtools is unified
 and can be configured from a single location (this module).
 
 By default, no handlers are provided and propagation is turned off. If any logging is needed, the user of the library
@@ -24,13 +24,13 @@ from logging import handlers
 
 import sys
 import time
-from runtoolsio.runcore.cfg import LogMode
+from runtools.runcore.cfg import LogMode
 
-from runtoolsio.runcore import cfg
-from runtoolsio.runcore import paths
-from runtoolsio.runcore.util import expand_user
+from runtools.runcore import cfg
+from runtools.runcore import paths
+from runtools.runcore.util import expand_user
 
-tarotools_logger = logging.getLogger('runtoolsio')
+tarotools_logger = logging.getLogger('runtools')
 tarotools_logger.propagate = False
 
 

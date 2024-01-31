@@ -3,9 +3,9 @@ from pathlib import Path
 
 import tomli_w
 
-from runtoolsio.runcore import cfg
-from runtoolsio.runcore import paths
-from runtoolsio.runcore.job import JobRun, InstanceTransitionObserver
+from runtools.runcore import cfg
+from runtools.runcore import paths
+from runtools.runcore.job import JobRun, InstanceTransitionObserver
 
 
 def reset_config():

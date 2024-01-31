@@ -5,15 +5,15 @@ This is a command line interface for the `runcore` library.
 import os
 
 import sys
-from runtoolsio.taro import cmd, cli
-from runtoolsio.taro.cli import ACTION_SETUP
-from runtoolsio.taro.printer import print_styled
-from runtoolsio.taro.theme import Theme
+from runtools.taro import cmd, cli
+from runtools.taro.cli import ACTION_SETUP
+from runtools.taro.printer import print_styled
+from runtools.taro.theme import Theme
 
-import runtoolsio.runcore.paths
-from runtoolsio import runjob
-from runtoolsio.runcore import util, paths
-from runtoolsio.runcore.common import RuntoolsException, ConfigFileNotFoundError
+import runtools.runcore.paths
+from runtools import runjob
+from runtools.runcore import util, paths
+from runtools.runcore.common import RuntoolsException, ConfigFileNotFoundError
 
 __version__ = "0.1.0"
 
@@ -69,7 +69,7 @@ def run_config(args):
         else:
             util.print_file(paths.lookup_config_file())
     elif args.config_action == cli.ACTION_CONFIG_CREATE:
-        created_file = runtoolsio.runcore.paths.copy_default_config_to_search_path(args.overwrite)
+        created_file = runtools.runcore.paths.copy_default_config_to_search_path(args.overwrite)
         print_styled((Theme.success, "Created "), ('', str(created_file)))
 
 
