@@ -3,15 +3,15 @@ This is a command line interface for the `runcore` library.
 """
 
 import os
-
 import sys
+
 from runtools.taro import cmd, cli
 from runtools.taro.cli import ACTION_SETUP
 from runtools.taro.printer import print_styled
 from runtools.taro.theme import Theme
 
 import runtools.runcore.paths
-from runtools import runjob
+from runtools import runner
 from runtools.runcore import util, paths
 from runtools.runcore.common import RuntoolsException, ConfigFileNotFoundError
 
@@ -81,11 +81,11 @@ def init_taro(args):
     config_vars = util.split_params(args.set)  # Config variables and override values
 
     if getattr(args, 'config', None):
-        runjob.load_config(args.config, **config_vars)
+        runner.load_config(args.config, **config_vars)
     elif getattr(args, 'def_config', False):
-        runjob.load_defaults(**config_vars) # TODO
+        runner.load_defaults(**config_vars) # TODO
     elif getattr(args, 'min_config', False):
-        runjob.configure(**config_vars)
+        runner.configure(**config_vars)
     else:
         # taro.load_config(**config_vars)
         pass
@@ -95,4 +95,4 @@ def run_command(args_ns):
     try:
         cmd.run(args_ns)
     finally:
-        runjob.close()
+        runner.close()
