@@ -20,9 +20,8 @@ ACTION_HOSTINFO = 'hostinfo'
 def parse_args(args):
     # TODO destination required
     parser = argparse.ArgumentParser(prog='run', description='Run managed job or service')
-    parser.add_argument("-V", "--version", action='version', help="show taro version and exit", version=version.get())
+    parser.add_argument("-V", "--version", action='version', help="Show version of runcli and exit", version=version.get())
     common = argparse.ArgumentParser()  # parent parser for subparsers in case they need to share common options
-    common.add_argument('--no-color', action='store_true', help='do not print colours in output')
     init_cfg_group(common)
     subparser = parser.add_subparsers(dest='action')  # command/action
 
