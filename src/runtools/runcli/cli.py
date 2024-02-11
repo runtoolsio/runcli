@@ -3,7 +3,7 @@ import re
 import textwrap
 from argparse import RawTextHelpFormatter
 
-from runtools.taro import version
+import sys
 
 from runtools.runcore.run import TerminationStatus
 
@@ -20,7 +20,7 @@ ACTION_HOSTINFO = 'hostinfo'
 def parse_args(args):
     # TODO destination required
     parser = argparse.ArgumentParser(prog='run', description='Run managed job or service')
-    parser.add_argument("-V", "--version", action='version', help="Show version of runcli and exit", version=version.get())
+    parser.add_argument("-V", "--version", action='version', help="Show version of runcli and exit", version='0.1.0')  # TODO Version
     common = argparse.ArgumentParser()  # parent parser for subparsers in case they need to share common options
     init_cfg_group(common)
     subparser = parser.add_subparsers(dest='action')  # command/action
@@ -31,6 +31,10 @@ def parse_args(args):
     _init_hostinfo_parser(common, subparser)
 
     parsed = parser.parse_args(args)
+    if not getattr(parsed, 'action', None):
+        parser.print_help()
+        sys.exit(1)
+
     _check_conditions(parser, parsed)
     return parsed
 
@@ -83,72 +87,72 @@ def _init_job_parser(common, subparsers):
         command and its arguments. """)
     # General options
     job_parser.add_argument('--id', type=str,
-                             help='Set the job ID. It is recommended to keep this value unset only for testing and '
-                                  'development purposes.')
+                            help='Set the job ID. It is recommended to keep this value unset only for testing and '
+                                 'development purposes.')
     job_parser.add_argument('--instance', type=str,
-                             help='Set the instance ID. A unique value is generated when this option is not set. It '
-                                  'is recommended to keep this value unique across all jobs.')
+                            help='Set the instance ID. A unique value is generated when this option is not set. It '
+                                 'is recommended to keep this value unique across all jobs.')
     job_parser.add_argument('-b', '--bypass-output', action='store_true',
-                             help='Normally the output of the executed job is captured by taro where is processed '
-                                  'and resend to standard streams. When this option is used taro does not capture '
-                                  'the output from the job streams. This disables output based features, but it '
-                                  'can help if there is any problem with output processing.')
+                            help='Normally the output of the executed job is captured by taro where is processed '
+                                 'and resend to standard streams. When this option is used taro does not capture '
+                                 'the output from the job streams. This disables output based features, but it '
+                                 'can help if there is any problem with output processing.')
     job_parser.add_argument('-o', '--no-overlap', action='store_true', default=False,
-                             help='Skip if job with the same job ID is already running')
+                            help='Skip if job with the same job ID is already running')
     job_parser.add_argument('-s', '--serial', action='store_true', default=False,
-                             help='The execution will wait while there is a running job with the same job ID or a job '
-                                  'belonging to the same execution group (if specified). As the name implies, '
-                                  'this is used to achieve serial execution of the same (or same group of) jobs, '
-                                  'i.e., to prevent parallel execution. The difference between this option and '
-                                  '--no-overlap is that this option will not terminate the current job when a related '
-                                  'job is executing, but puts this job in a waiting state instead. This option is a '
-                                  'shortcut for the --max-executions 1 option (see help for more details).')
+                            help='The execution will wait while there is a running job with the same job ID or a job '
+                                 'belonging to the same execution group (if specified). As the name implies, '
+                                 'this is used to achieve serial execution of the same (or same group of) jobs, '
+                                 'i.e., to prevent parallel execution. The difference between this option and '
+                                 '--no-overlap is that this option will not terminate the current job when a related '
+                                 'job is executing, but puts this job in a waiting state instead. This option is a '
+                                 'shortcut for the --max-executions 1 option (see help for more details).')
     job_parser.add_argument('-m', '--max-executions', type=int, default=0,
-                             help='This option restricts the maximum number of parallel executions of the same job or '
-                                  'jobs from the same execution group (if specified). If the current number of '
-                                  'related executions prevents this job from being executed, then the job is put in a '
-                                  'waiting state and resumed when the number of executions decreases. If there are '
-                                  'more jobs waiting, the earlier ones have priority.')
+                            help='This option restricts the maximum number of parallel executions of the same job or '
+                                 'jobs from the same execution group (if specified). If the current number of '
+                                 'related executions prevents this job from being executed, then the job is put in a '
+                                 'waiting state and resumed when the number of executions decreases. If there are '
+                                 'more jobs waiting, the earlier ones have priority.')
     job_parser.add_argument('-g', '--execution-group', type=str,
-                             help='Sets the execution group for the job. The maximum number of simultaneous executions '
-                                  'for all jobs belonging to the same execution group can be specified using the '
-                                  '`--serial` or `max-executions` options. If an execution group is not set then '
-                                  'it defaults to the job ID.')
+                            help='Sets the execution group for the job. The maximum number of simultaneous executions '
+                                 'for all jobs belonging to the same execution group can be specified using the '
+                                 '`--serial` or `max-executions` options. If an execution group is not set then '
+                                 'it defaults to the job ID.')
     job_parser.add_argument('-P', '--pending', type=str,
-                             help='Specifies pending group. The job will wait before execution in pending state'
-                                  'until the group receives releasing signal. See the `release` command.')
+                            help='Specifies pending group. The job will wait before execution in pending state'
+                                 'until the group receives releasing signal. See the `release` command.')
     job_parser.add_argument('--warn-time', type=_warn_time_type, action='append', default=[],
-                             help='This enables time warning which is trigger when the execution of the job exceeds '
-                                  'the period specified by the value of this option. The value must be an integer '
-                                  'followed by a single time unit character (one of [smhd]). For example `--warn-time '
-                                  '1h` will trigger time warning when the job is executing over one hour.')
+                            help='This enables time warning which is trigger when the execution of the job exceeds '
+                                 'the period specified by the value of this option. The value must be an integer '
+                                 'followed by a single time unit character (one of [smhd]). For example `--warn-time '
+                                 '1h` will trigger time warning when the job is executing over one hour.')
     job_parser.add_argument('--warn-output', type=str, action='append', default=[],
-                             help='This enables output warning which is triggered each time an output line of the job '
-                                  'matches regex specified by the value of this option. For example `--warn-output '
-                                  '"ERR*"` triggers output warning each time an output line contains a word starting '
-                                  'with ERR.')
+                            help='This enables output warning which is triggered each time an output line of the job '
+                                 'matches regex specified by the value of this option. For example `--warn-output '
+                                 '"ERR*"` triggers output warning each time an output line contains a word starting '
+                                 'with ERR.')
     job_parser.add_argument('-d', '--depends-on', type=str, action='append', default=[],
-                             help='The execution will be skipped if specified dependency job is not running.')
+                            help='The execution will be skipped if specified dependency job is not running.')
     job_parser.add_argument('-k', '--kv-filter', action='store_true', default=False,
-                             help='Key-value output parser is used for task tracking.')
+                            help='Key-value output parser is used for task tracking.')
     job_parser.add_argument('--kv-alias', type=str, action='append', default=[],
-                             help='Mapping of output keys to common fields.')
+                            help='Mapping of output keys to common fields.')
     job_parser.add_argument('-p', '--grok-pattern', type=str, action='append', default=[],
-                             help='Grok pattern for extracting fields from output used for task tracking.')
+                            help='Grok pattern for extracting fields from output used for task tracking.')
     job_parser.add_argument('--dry-run', type=_str2_term_status, nargs='?', const=TerminationStatus.COMPLETED,
-                             help='The job will be started without actual execution of its command. The final state '
-                                  'of the job is specified by the value of this option. Default state is COMPLETED. '
-                                  'This option can be used for testing some of the functionality like custom plugins.')
+                            help='The job will be started without actual execution of its command. The final state '
+                                 'of the job is specified by the value of this option. Default state is COMPLETED. '
+                                 'This option can be used for testing some of the functionality like custom plugins.')
     job_parser.add_argument('-t', '--timeout', type=str,
-                             help='The value of this option specifies the signal number or code for stopping the job '
-                                  'due to a timeout. A timeout warning is added to the job when it is stopped in this '
-                                  'way.')
+                            help='The value of this option specifies the signal number or code for stopping the job '
+                                 'due to a timeout. A timeout warning is added to the job when it is stopped in this '
+                                 'way.')
 
     job_parser.add_argument('--param', type=lambda p: p.split('='), action='append',
-                             help="Parameters are specified in `name=value` format. They represent metadata of the "
-                                  "job instance and have no effect on the job execution. They are stored for the each "
-                                  "execution and can be retrieved later. For example the `history` command has "
-                                  "`--show-params` option to display `Parameters` column.")
+                            help="Parameters are specified in `name=value` format. They represent metadata of the "
+                                 "job instance and have no effect on the job execution. They are stored for the each "
+                                 "execution and can be retrieved later. For example the `history` command has "
+                                 "`--show-params` option to display `Parameters` column.")
     # Terms command and arguments taken from python doc and docker run help,
     # for this app (or rather exec command) these are operands (alternatively arguments)
     job_parser.add_argument('command', type=str, metavar='COMMAND', help='Program to execute')

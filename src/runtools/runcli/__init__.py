@@ -106,7 +106,4 @@ def resolve_config_path(args):
 
 
 def run_command(args_ns):
-    try:
-        cmd.run(args_ns)
-    finally:
-        runner.close()
+    cmd.run(args_ns)
