@@ -41,6 +41,8 @@ def main(args):
     except RuntoolsException as e:
         print("User error: " + str(e), file=sys.stderr)
         exit(1)
+    except KeyboardInterrupt:
+        exit(130)
 
 
 def run_app(args):
