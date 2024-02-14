@@ -12,7 +12,7 @@ def run(args):
 
 
 def clean_socket(file_extension, socket_group):
-    cleaned = runner.clean_stale_sockets(paths.socket_files(file_extension))
+    cleaned = runner.clean_stale_sockets(paths.socket_files_provider(file_extension))
     print(f"Cleaned sockets for {socket_group}: {len(cleaned)}")
     for c in cleaned:
         print('  cleaned: ' + str(c))
