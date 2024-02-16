@@ -1,0 +1,2 @@
+class ProgramExecutionError(SystemExit):
+    pass
