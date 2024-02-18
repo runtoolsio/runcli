@@ -30,7 +30,7 @@ def run(args):
 
     parsers = list(output_parsers(args))
     if parsers:
-        task_tracker = TaskTrackerMem(job_id)
+        task_tracker = TaskTrackerMem()
         output_to_task = OutputToTask(task_tracker, parsers)
         exec_phase = ExecutingPhase('Job Execution', execution, output_handlers=(output_to_task.new_output,))
     else:
@@ -61,7 +61,8 @@ def output_parsers(args):
             yield Grok(grok_pattern).match
     if args.kv_filter:
         aliases = util.split_params(args.kv_alias)
-        yield KVParser(aliases=aliases, post_parsers=[iso_date_time_parser(Fields.TIMESTAMP.value)])
+        # Trim value and possible other things configurable
+        yield KVParser(trim_value=',', aliases=aliases, post_parsers=[iso_date_time_parser(Fields.TIMESTAMP.value)])
 
 
 def _set_signal_handlers(job_instance, timeout_signal):
