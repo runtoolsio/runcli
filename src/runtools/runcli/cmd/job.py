@@ -32,7 +32,7 @@ def run(args):
     if parsers:
         task_tracker = TaskTrackerMem(job_id)
         output_to_task = OutputToTask(task_tracker, parsers)
-        exec_phase = ExecutingPhase('Job Execution', execution, output_handlers=output_to_task.new_output)
+        exec_phase = ExecutingPhase('Job Execution', execution, output_handlers=(output_to_task.new_output,))
     else:
         task_tracker = None
         exec_phase = ExecutingPhase('Job Execution', execution)
