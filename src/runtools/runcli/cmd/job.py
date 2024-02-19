@@ -15,7 +15,7 @@ from runtools.runcli.common import ProgramExecutionError
 from runtools.runcore import util
 from runtools.runcore.track import TaskTrackerMem
 from runtools.runcore.util import KVParser, iso_date_time_parser
-from runtools.runner import ExecutingPhase
+from runtools.runner import ExecutingPhase, warning
 from runtools.runner.program import ProgramExecution
 from runtools.runner.task import Fields, OutputToTask
 from runtools.runner.test.execution import TestExecution
@@ -27,18 +27,18 @@ def run(args):
     job_id = args.id or " ".join([args.command.removeprefix('./')] + args.arg)
 
     execution = resolve_execution(args)
-
-    parsers = list(output_parsers(args))
-    if parsers:
-        task_tracker = TaskTrackerMem()
-        output_to_task = OutputToTask(task_tracker, parsers)
-        exec_phase = ExecutingPhase('Job Execution', execution, output_handlers=(output_to_task.new_output,))
-    else:
-        task_tracker = None
-        exec_phase = ExecutingPhase('Job Execution', execution)
+    task_tracker = TaskTrackerMem()
+    output_handlers = []
+    if parsers := list(output_parsers(args)):
+        output_handlers.append(OutputToTask(task_tracker, parsers).new_output)
+    exec_phase = ExecutingPhase('Job Execution', execution, output_handlers=output_handlers)
 
     job_instance = runner.job_instance(job_id, [exec_phase], task_tracker=task_tracker)
+
+    warning.register(job_instance, warn_times=args.warn_time, warn_outputs=args.warn_output)
+
     _set_signal_handlers(job_instance, args.timeout)
+
     job_instance.run()
 
     if isinstance(execution, ProgramExecution) and execution.ret_code:
@@ -56,7 +56,7 @@ def resolve_execution(args):
 
 def output_parsers(args):
     if args.grok_pattern:
-        from pygrok import Grok  # Defer import until is needed
+        from pygrok import Grok
         for grok_pattern in args.grok_pattern:
             yield Grok(grok_pattern).match
     if args.kv_filter:
