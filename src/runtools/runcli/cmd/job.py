@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 def run(args):
-    job_id = args.id or " ".join([args.command] + args.arg)
+    job_id = args.id or " ".join([args.command.removeprefix('./')] + args.arg)
 
     execution = resolve_execution(args)
 
