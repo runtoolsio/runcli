@@ -16,6 +16,7 @@ from runtools.runcore import util
 from runtools.runcore.track import TaskTrackerMem
 from runtools.runcore.util import KVParser, iso_date_time_parser
 from runtools.runner import ExecutingPhase, warning
+from runtools.runner.coordination import ApprovalPhase
 from runtools.runner.program import ProgramExecution
 from runtools.runner.task import Fields, OutputToTask
 from runtools.runner.test.execution import TestExecution
@@ -26,6 +27,7 @@ log = logging.getLogger(__name__)
 def run(args):
     job_id = args.id or " ".join([args.command.removeprefix('./')] + args.arg)
 
+    pre_exec_phases = list(resolve_pre_execution_phases(args))
     execution = resolve_execution(args)
     task_tracker = TaskTrackerMem()
     output_handlers = []
@@ -33,7 +35,7 @@ def run(args):
         output_handlers.append(OutputToTask(task_tracker, parsers).new_output)
     exec_phase = ExecutingPhase('Job Execution', execution, output_handlers=output_handlers)
 
-    job_instance = runner.job_instance(job_id, [exec_phase], task_tracker=task_tracker)
+    job_instance = runner.job_instance(job_id, pre_exec_phases + [exec_phase], task_tracker=task_tracker)
 
     warning.register(job_instance, warn_times=args.warn_time, warn_outputs=args.warn_output)
 
@@ -46,6 +48,11 @@ def run(args):
             raise ProgramExecutionError(execution.ret_code)
         if execution.ret_code < 0:
             raise ProgramExecutionError(abs(execution.ret_code) + 128)
+
+
+def resolve_pre_execution_phases(args):
+    if args.approve:
+        yield ApprovalPhase('Approval')
 
 
 def resolve_execution(args):

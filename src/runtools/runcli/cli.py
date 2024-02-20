@@ -118,7 +118,7 @@ def _init_job_parser(common, subparsers):
                                  'for all jobs belonging to the same execution group can be specified using the '
                                  '`--serial` or `max-executions` options. If an execution group is not set then '
                                  'it defaults to the job ID.')
-    job_parser.add_argument('-P', '--pending', type=str,
+    job_parser.add_argument('-A', '--approve', action='store_true', default=False,
                             help='Specifies pending group. The job will wait before execution in pending state'
                                  'until the group receives releasing signal. See the `release` command.')
     job_parser.add_argument('--warn-time', type=_warn_time_type, action='append', default=[],
