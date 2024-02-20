@@ -90,5 +90,5 @@ class Term:
 
     def timeout(self, _, __):
         log.warning('event=[terminated_by_timeout_signal]')
-        # self.job_instance.add_warning(Warn('timeout'))  # TODO
+        self.job_instance.task_tracker.warning('timeout')
         self.job_instance.stop()
