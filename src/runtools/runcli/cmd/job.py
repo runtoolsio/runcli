@@ -32,7 +32,7 @@ def run(args):
     task_tracker = TaskTrackerMem()
     output_handlers = []
     if parsers := list(output_parsers(args)):
-        output_handlers.append(OutputToTask(task_tracker, parsers).new_output)
+        output_handlers.append(OutputToTask(task_tracker, parsers=parsers).new_output)
     exec_phase = ExecutingPhase('Job Execution', execution, output_handlers=output_handlers)
 
     job_instance = runner.job_instance(job_id, pre_exec_phases + [exec_phase], task_tracker=task_tracker)
