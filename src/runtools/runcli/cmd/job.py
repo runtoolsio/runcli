@@ -16,7 +16,7 @@ from runtools.runcore import util
 from runtools.runcore.track import TaskTrackerMem
 from runtools.runcore.util import KVParser, iso_date_time_parser
 from runtools.runner import ExecutingPhase, warning
-from runtools.runner.coordination import ApprovalPhase
+from runtools.runner.coordination import ApprovalPhase, NoOverlapPhase
 from runtools.runner.program import ProgramExecution
 from runtools.runner.task import Fields, OutputToTask
 from runtools.runner.test.execution import TestExecution
@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 def run(args):
     job_id = args.id or " ".join([args.command.removeprefix('./')] + args.arg)
 
-    pre_exec_phases = list(resolve_pre_execution_phases(args))
+    pre_exec_phases = list(resolve_pre_execution_phases(args, job_id))
     execution = resolve_execution(args)
     task_tracker = TaskTrackerMem()
     output_handlers = []
@@ -50,9 +50,11 @@ def run(args):
             raise ProgramExecutionError(abs(execution.ret_code) + 128)
 
 
-def resolve_pre_execution_phases(args):
+def resolve_pre_execution_phases(args, job_id):
     if args.approve:
         yield ApprovalPhase('Approval')
+    if args.no_overlap:
+        yield NoOverlapPhase('No Overlap Check', job_id)
 
 
 def resolve_execution(args):
