@@ -17,7 +17,7 @@ from runtools.runcore.criteria import InstanceMetadataCriterion
 from runtools.runcore.track import TaskTrackerMem
 from runtools.runcore.util import KVParser, iso_date_time_parser
 from runtools.runner import ExecutingPhase, warning
-from runtools.runner.coordination import ApprovalPhase, NoOverlapPhase, DependencyPhase
+from runtools.runner.coordination import ApprovalPhase, NoOverlapPhase, DependencyPhase, ExecutionQueue
 from runtools.runner.program import ProgramExecution
 from runtools.runner.task import Fields, OutputToTask
 from runtools.runner.test.execution import TestExecution
@@ -58,6 +58,8 @@ def resolve_pre_execution_phases(args, job_id):
         yield NoOverlapPhase('No Overlap Check', job_id)
     for d in args.depends_on:
         yield DependencyPhase(f'Dependency check {d}', InstanceMetadataCriterion.parse_pattern(d))
+    if args.serial:
+        yield ExecutionQueue('Serial Queue', job_id, 1)
 
 
 def resolve_execution(args):
