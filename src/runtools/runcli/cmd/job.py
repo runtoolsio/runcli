@@ -53,11 +53,11 @@ def run(args):
 
 def resolve_pre_execution_phases(args, job_id):
     if args.approve:
-        yield ApprovalPhase('Approval')
+        yield ApprovalPhase()
     if args.no_overlap:
-        yield NoOverlapPhase('No Overlap Check', job_id)
+        yield NoOverlapPhase(job_id)
     for d in args.depends_on:
-        yield DependencyPhase(f'Dependency check {d}', InstanceMetadataCriterion.parse_pattern(d))
+        yield DependencyPhase(InstanceMetadataCriterion.parse_pattern(d))
     if args.serial:
         yield ExecutionQueue('Serial Queue', job_id, 1)
 
