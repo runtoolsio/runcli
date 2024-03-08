@@ -8,7 +8,8 @@ from runtools import runner
 from runtools.runcli import cmd, cli, config
 from runtools.runcli.cli import ACTION_SETUP
 from runtools.runcore import util, paths
-from runtools.runcore.common import RuntoolsException, ConfigFileNotFoundError
+from runtools.runcore.common import RuntoolsException
+from runtools.runcore.paths import ConfigFileNotFoundError
 
 __version__ = "0.1.0"
 

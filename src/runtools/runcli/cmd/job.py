@@ -59,7 +59,7 @@ def resolve_pre_execution_phases(args, job_id):
     for d in args.depends_on:
         yield DependencyPhase(InstanceMetadataCriterion.parse_pattern(d))
     if args.serial:
-        yield ExecutionQueue('Serial Queue', job_id, 1)
+        yield ExecutionQueue(job_id, 1)
 
 
 def resolve_execution(args):

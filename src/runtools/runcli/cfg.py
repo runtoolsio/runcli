@@ -12,7 +12,8 @@ from enum import Enum, auto
 import sys
 
 from runtools.runcore import util, paths
-from runtools.runcore.common import ConfigFileNotFoundError, RuntoolsException
+from runtools.runcore.common import RuntoolsException
+from runtools.runcore.paths import ConfigFileNotFoundError
 from runtools.runcore.util.attr import get_module_attributes
 
 
