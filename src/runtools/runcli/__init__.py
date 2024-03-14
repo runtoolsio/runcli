@@ -5,7 +5,7 @@ This is a command line interface for the `runcore` library.
 import sys
 
 from runtools import runner
-from runtools.runcli import cmd, cli, config
+from runtools.runcli import cmd, cli, config, log
 from runtools.runcli.cli import ACTION_SETUP
 from runtools.runcore import util, paths
 from runtools.runcore.common import RuntoolsException
@@ -83,6 +83,7 @@ def configure_runner(args):
         configuration = util.read_toml_file(resolve_config_path(args))
     update_nested_dict(configuration, util.split_params(args.set))  # Override config by `set` args
     runner.configure(**configuration)
+    log.configure(True, 'debug')
 
 
 def packed_config_path():

@@ -59,7 +59,7 @@ def resolve_pre_execution_phases(args, job_id):
     for d in args.depends_on:
         yield DependencyPhase(InstanceMetadataCriterion.parse_pattern(d))
     if max_exec := (args.max_executions or int(args.serial)):
-        yield ExecutionQueue(job_id, max_exec)
+        yield ExecutionQueue(getattr(args, 'queue_id') or job_id, max_exec)
 
 
 def resolve_execution(args):

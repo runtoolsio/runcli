@@ -24,20 +24,14 @@ from logging import handlers
 
 import sys
 import time
-from runtools.runcore.cfg import LogMode
 
-from runtools.runcore import cfg
 from runtools.runcore import paths
 from runtools.runcore.util import expand_user
 
-tarotools_logger = logging.getLogger('runtools')
-tarotools_logger.propagate = False
+runtools_logger = logging.getLogger('runtools')
+runtools_logger.propagate = False
 
-
-def config_logger(*, enable, propagate):
-    tarotools_logger.disabled = not enable
-    tarotools_logger.propagate = propagate
-
+log_timing = False
 
 DEF_FORMATTER = logging.Formatter('%(asctime)s - %(levelname)-5s - %(name)s - %(message)s')
 
@@ -46,41 +40,30 @@ STDERR_HANDLER_NAME = 'stderr-handler'
 FILE_HANDLER_NAME = 'file-handler'
 
 
-def configure(log_mode, log_stdout_level='warn', log_file_level='info', log_file_path=None):
-    tarotools_logger.handlers.clear()
-    tarotools_logger.setLevel(logging.WARNING)
+def configure(enabled, log_stdout_level='warn', log_file_level='info', log_file_path=None):
+    runtools_logger.handlers.clear()
+    runtools_logger.setLevel(logging.WARNING)
 
-    if log_mode == LogMode.PROPAGATE:
-        # TODO log level must be set for the root logger, otherwise it's always WARNING
-        config_logger(enable=True, propagate=True)
+    if not enabled:
+        runtools_logger.disabled = True
         return
-
-    if log_mode == LogMode.DISABLED:
-        config_logger(enable=False, propagate=False)
-        return
-
-    config_logger(enable=True, propagate=False)
 
     if log_stdout_level != 'off':
         level = logging.getLevelName(log_stdout_level.upper())
         setup_console(level)
-        if level < tarotools_logger.getEffectiveLevel():
-            tarotools_logger.setLevel(level)
+        if level < runtools_logger.getEffectiveLevel():
+            runtools_logger.setLevel(level)
 
     if log_file_level != 'off':
         level = logging.getLevelName(log_file_level.upper())
         log_file_path = expand_user(log_file_path) or paths.log_file_path(create=True)
         setup_file(level, log_file_path)
-        if level < tarotools_logger.getEffectiveLevel():
-            tarotools_logger.setLevel(level)
-
-
-def init_by_config():
-    configure(cfg.log_mode, cfg.log_stdout_level, cfg.log_file_level, cfg.log_file_path)
+        if level < runtools_logger.getEffectiveLevel():
+            runtools_logger.setLevel(level)
 
 
 def is_disabled():
-    return tarotools_logger.disabled
+    return runtools_logger.disabled
 
 
 def setup_console(level):
@@ -124,7 +107,7 @@ def get_file_path():
 
 
 def _find_handler(name):
-    for handler in tarotools_logger.handlers:
+    for handler in runtools_logger.handlers:
         if handler.name == name:
             return handler
 
@@ -134,9 +117,9 @@ def _find_handler(name):
 def register_handler(handler):
     previous = _find_handler(handler.name)
     if previous:
-        tarotools_logger.removeHandler(previous)
+        runtools_logger.removeHandler(previous)
 
-    tarotools_logger.addHandler(handler)
+    runtools_logger.addHandler(handler)
 
 
 def _get_handler_level(name):
@@ -145,7 +128,7 @@ def _get_handler_level(name):
 
 
 def timing(operation, *, args_idx=()):
-    timer_logger = logging.getLogger('runcore.timer')
+    timer_logger = logging.getLogger('runtools.timer')
 
     def decorator(func):
 
@@ -153,7 +136,7 @@ def timing(operation, *, args_idx=()):
         def wrapper(*args, **kwargs):
             start_time = time.time()
             result = func(*args, **kwargs)
-            if cfg.log_timing:
+            if log_timing:
                 log_args = []
                 for i in args_idx:
                     if i >= len(args):

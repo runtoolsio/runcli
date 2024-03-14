@@ -113,10 +113,10 @@ def _init_job_parser(common, subparsers):
                                  'related executions prevents this job from being executed, then the job is put in a '
                                  'waiting state and resumed when the number of executions decreases. If there are '
                                  'more jobs waiting, the earlier ones have priority.')
-    job_parser.add_argument('-g', '--execution-group', type=str,
-                            help='Sets the execution group for the job. The maximum number of simultaneous executions '
-                                 'for all jobs belonging to the same execution group can be specified using the '
-                                 '`--serial` or `max-executions` options. If an execution group is not set then '
+    job_parser.add_argument('-q', '--queue-id', type=str,
+                            help='Sets the queue ID for the job. The maximum number of simultaneous executions '
+                                 'for all jobs belonging to the same execution queue can be specified using the '
+                                 '`--serial` or `max-executions` options. If an execution queue is not set then '
                                  'it defaults to the job ID.')
     job_parser.add_argument('-A', '--approve', action='store_true', default=False,
                             help='Specifies pending group. The job will wait before execution in pending state'
