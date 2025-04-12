@@ -1,18 +1,14 @@
 """
-This is a command line interface for the `runcore` library.
+This is a command line interface for the `runjob` library.
 """
 
 import sys
 
-from runtools import runner
-from runtools.runcli import cmd, cli, config, log
-from runtools.runcli.cli import ACTION_SETUP
+from . import cmd, cli, config, log, __version__
+from .cli import ACTION_SETUP
 from runtools.runcore import util, paths
-from runtools.runcore.common import RuntoolsException
+from runtools.runcore.err import RuntoolsException
 from runtools.runcore.paths import ConfigFileNotFoundError
-
-__version__ = "0.1.0"
-
 from runtools.runcore.util import update_nested_dict
 
 CONFIG_FILE = 'runcli.toml'

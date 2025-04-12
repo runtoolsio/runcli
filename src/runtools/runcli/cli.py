@@ -5,6 +5,9 @@ from argparse import RawTextHelpFormatter
 
 import sys
 
+from rich_argparse import RichHelpFormatter
+
+from . import __version__
 from runtools.runcore.run import TerminationStatus
 
 ACTION_JOB = 'job'
@@ -14,21 +17,26 @@ ACTION_SETUP = 'setup'
 ACTION_SETUP_CONFIG = 'config'
 ACTION_CONFIG_PRINT = 'print'
 ACTION_CONFIG_CREATE = 'create'
-ACTION_HOSTINFO = 'hostinfo'
 
 
 def parse_args(args):
-    # TODO destination required
-    parser = argparse.ArgumentParser(prog='run', description='Run managed job or service')
-    parser.add_argument("-V", "--version", action='version', help="Show version of runcli and exit", version='0.1.0')  # TODO Version
-    common = argparse.ArgumentParser()  # parent parser for subparsers in case they need to share common options
-    init_cfg_group(common)
+    parser = argparse.ArgumentParser(
+        prog='run',
+        description='Run managed job or service',
+        formatter_class=RichHelpFormatter)
+    parser.add_argument(
+        "-V",
+        "--version",
+        action='version',
+        help="Show version of runcli and exit",
+        version=__version__.__version__)
+
+    parent = init_cfg_parent_parser()
     subparser = parser.add_subparsers(dest='action')  # command/action
 
-    _init_job_parser(common, subparser)
-    _init_clean_parser(common, subparser)
+    _init_job_parser(parent, subparser)
+    _init_clean_parser(parent, subparser)
     _init_setup_parser(subparser)
-    _init_hostinfo_parser(common, subparser)
 
     parsed = parser.parse_args(args)
     if not getattr(parsed, 'action', None):
@@ -39,8 +47,13 @@ def parse_args(args):
     return parsed
 
 
-def init_cfg_group(common):
-    cfg_group = common.add_argument_group("Configuration options")
+def init_cfg_parent_parser():
+    """
+    Return:
+        Parent parser for subparsers to share common configuration options
+    """
+    parser = argparse.ArgumentParser()
+    cfg_group = parser.add_argument_group("Configuration options")
     cfg_group.description = """
         These options affects the way how the configuration is loaded and set.
         By default the configuration file located in one of the XDG directories is loaded and its content
@@ -49,29 +62,26 @@ def init_cfg_group(common):
         More details in the config doc: https://github.com/taro-suite/taro/blob/master/CONFIG.md
     """
     cfg_group.add_argument('-dc', '--def-config', action='store_true',
-                           help='Use configuration stored in default config file. Run `taro config show -dc` to see '
-                                'the content of the file.')
-    cfg_group.add_argument('-mc', '--min-config', action='store_true',
-                           help='Do not load any config file and use minimal configuration instead. Check CONFIG.md '
-                                'for minimal configuration values.')
+                           help='Do not lookup config file and use default configuration instead.')
+    cfg_group.add_argument('-rc', '--requires-config', action='store_true',
+                           help='Configuration file must be present, otherwise the command will fail')
     cfg_group.add_argument('-C', '--config', type=str,
-                           help='Load a config file stored in a custom location. The value of this option is the path '
-                                'to the custom config file.')
+                           help='Specifies path to config file stored in custom location.')
     cfg_group.add_argument('--set', type=str, action='append',
-                           help='Override value of a configuration attribute. The value format is: attribute=value. '
-                                'See CONFIG.md for attributes details. This option can be used multiple times.')
+                           help='Override value of config attribute. Format: attribute=value.')
+    return parser
 
 
-def _init_job_parser(common, subparsers):
+def _init_job_parser(parent, subparsers):
     """
     Creates parser for `exec` command
 
-    :param common: parent parser
+    :param parent: parent parser
     :param subparsers: sub-parser for exec parser to be added to
     """
 
     job_parser = subparsers.add_parser(
-        ACTION_JOB, formatter_class=RawTextHelpFormatter, parents=[common], description='Execute command',
+        ACTION_JOB, formatter_class=RawTextHelpFormatter, parents=[parent], description='Execute command',
         add_help=False)
 
     job_parser.description = textwrap.dedent("""
@@ -193,17 +203,6 @@ def _init_setup_parser(subparser):
         ACTION_CONFIG_CREATE, help='Create configuration file', add_help=False)
     create__config_parser.add_argument("--overwrite", action="store_true", help="overwrite config file to default")
 
-
-def _init_hostinfo_parser(common, subparsers):
-    """
-    Creates parsers for `hostinfo` command
-
-    :param common: parent parser
-    :param subparsers: sub-parser for hostinfo parser to be added to
-    """
-
-    hostinfo_parser = subparsers.add_parser(
-        ACTION_HOSTINFO, parents=[common], description='Show host info', add_help=False)
 
 
 # TODO Consider: change to str (like SortCriteria case) and remove this function
