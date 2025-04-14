@@ -6,3 +6,10 @@ def expand_user(file):
         return file
 
     return os.path.expanduser(file)
+
+
+def print_file(path):
+    path = expand_user(path)
+    print('Showing file: ' + str(path))
+    with open(path, 'r') as file:
+        print(file.read())

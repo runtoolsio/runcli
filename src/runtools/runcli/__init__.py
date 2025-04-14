@@ -4,8 +4,9 @@ This is a command line interface for the `runjob` library.
 
 import sys
 
-from . import cmd, cli, config, log, __version__
-from .cli import ACTION_SETUP
+from . import __version__, cmd, cli, config, log
+from .cli import ACTION_CONFIG
+from .util import print_file
 from runtools.runcore import util, paths
 from runtools.runcore.err import RuntoolsException
 from runtools.runcore.paths import ConfigFileNotFoundError
@@ -32,8 +33,8 @@ def main(args):
     except ConfigFileNotFoundError as e:
         print("User error: " + str(e), file=sys.stderr)
         if e.search_path:
-            print("Run `setup config create` command to create the configuration file "
-                  "or see `-dc` and `-mc` options to execute without config file", file=sys.stderr)
+            print("Run `config create` command to create configuration file "
+                  "or use `-dc` option to execute using default config", file=sys.stderr)
         exit(1)
     except RuntoolsException as e:
         print("User error: " + str(e), file=sys.stderr)
@@ -45,24 +46,19 @@ def main(args):
 def run_app(args):
     args_parsed = cli.parse_args(args)
 
-    if args_parsed.action == ACTION_SETUP:
-        run_setup(args_parsed)
+    if args_parsed.action == ACTION_CONFIG:
+        run_config(args_parsed)
     else:
         configure_runner(args_parsed)
         run_command(args_parsed)
 
 
-def run_setup(args):
-    if args.setup_action == cli.ACTION_SETUP_CONFIG:
-        run_config(args)
-
-
 def run_config(args):
     if args.config_action == cli.ACTION_CONFIG_PRINT:
         if getattr(args, 'def_config', False):
-            util.print_file(packed_config_path())
+            print_file(packed_config_path())
         else:
-            util.print_file(paths.lookup_file_in_config_path(CONFIG_FILE))
+            print_file(paths.lookup_file_in_config_path(CONFIG_FILE))
     elif args.config_action == cli.ACTION_CONFIG_CREATE:
         created_file = paths.copy_config_to_search_path(config.__package__, CONFIG_FILE, args.overwrite)
         print("Created " + str(created_file))

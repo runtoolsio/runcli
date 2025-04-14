@@ -13,8 +13,7 @@ from runtools.runcore.run import TerminationStatus
 ACTION_JOB = 'job'
 ACTION_SERVICE = 'service'
 ACTION_CLEAN = 'clean'
-ACTION_SETUP = 'setup'
-ACTION_SETUP_CONFIG = 'config'
+ACTION_CONFIG = 'config'
 ACTION_CONFIG_PRINT = 'print'
 ACTION_CONFIG_CREATE = 'create'
 
@@ -36,7 +35,7 @@ def parse_args(args):
 
     _init_job_parser(parent, subparser)
     _init_clean_parser(parent, subparser)
-    _init_setup_parser(subparser)
+    _init_config_parser(subparser)
 
     parsed = parser.parse_args(args)
     if not getattr(parsed, 'action', None):
@@ -81,7 +80,10 @@ def _init_job_parser(parent, subparsers):
     """
 
     job_parser = subparsers.add_parser(
-        ACTION_JOB, formatter_class=RawTextHelpFormatter, parents=[parent], description='Execute command',
+        ACTION_JOB,
+        parents=[parent],
+        description='Execute command',
+        formatter_class=RichHelpFormatter,
         add_help=False)
 
     job_parser.description = textwrap.dedent("""
@@ -181,29 +183,40 @@ def _init_clean_parser(common, subparsers):
                                          add_help=False)
 
 
-def _init_setup_parser(subparser):
+def _init_config_parser(subparser):
     """
-    Creates parsers for `setup` command
-
-    :param subparser: sub-parser for setup parser to be added to
+    Creates parsers for `config` command and its subcommands.
+    :param subparser: sub-parser for config parser to be added to
     """
+    config_parser = subparser.add_parser(
+        ACTION_CONFIG,
+        description='Manage config file',
+        help='Manage config file',
+        formatter_class=RichHelpFormatter)
 
-    setup_parser = subparser.add_parser(ACTION_SETUP, description='Setup related actions')
-    setup_parser.add_argument('--no-color', action='store_true', help='do not print colours in output')
+    config_subparser = config_parser.add_subparsers(dest='config_action', required=True) # Actions under 'config'
 
-    setup_subparser = setup_parser.add_subparsers(dest='setup_action')
-    config_parser = setup_subparser.add_parser(ACTION_SETUP_CONFIG, help='Config related commands')
-    config_subparser = config_parser.add_subparsers(dest='config_action')
+    print_config_parser = config_subparser.add_parser(
+        ACTION_CONFIG_PRINT,
+        help='Print config file content',
+        description='Print config file content. Default: prints loaded config from standard locations (e.g., XDG).',
+        formatter_class=RichHelpFormatter)
+    print_config_parser.add_argument('-dc', '--def-config', action='store_true',
+                                     help='Show default config file content.')
 
-    show_config_parser = config_subparser.add_parser(
-        ACTION_CONFIG_PRINT, help='Print content of the current configuration')
-    show_config_parser.add_argument('-dc', '--def-config', action='store_true', help='Show content of default config')
-
-    create__config_parser = config_subparser.add_parser(
-        ACTION_CONFIG_CREATE, help='Create configuration file', add_help=False)
-    create__config_parser.add_argument("--overwrite", action="store_true", help="overwrite config file to default")
-
-
+    create_config_parser = config_subparser.add_parser(
+        ACTION_CONFIG_CREATE,
+        help='Create new config file',
+        description='Create new config file with defaults. Default location: standard user config dir (e.g., XDG_CONFIG_HOME). Fails if exists.', # More concise
+        formatter_class=RichHelpFormatter,
+        add_help=True)
+    create_config_parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite if config file exists.")
+    create_config_parser.add_argument(
+        '-p', '--path', type=str,
+        help='Specify path for created config file.')
 
 # TODO Consider: change to str (like SortCriteria case) and remove this function
 def _str2_term_status(v):
