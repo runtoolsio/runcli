@@ -1,15 +1,15 @@
 """
 This is a command line interface for the `runjob` library.
 """
+from pathlib import Path
 
 import sys
 
 from . import __version__, cmd, cli, config, log
 from .cli import ACTION_CONFIG
-from .util import print_file
 from runtools.runcore import util, paths
 from runtools.runcore.err import RuntoolsException
-from runtools.runcore.paths import ConfigFileNotFoundError
+from runtools.runcore.paths import ConfigFileNotFoundError, print_file
 from runtools.runcore.util import update_nested_dict
 
 CONFIG_FILE = 'runcli.toml'
@@ -60,7 +60,10 @@ def run_config(args):
         else:
             print_file(paths.lookup_file_in_config_path(CONFIG_FILE))
     elif args.config_action == cli.ACTION_CONFIG_CREATE:
-        created_file = paths.copy_config_to_search_path(config.__package__, CONFIG_FILE, args.overwrite)
+        if path := getattr(args, 'path'):
+            created_file = paths.copy_config_to_path(config.__package__, CONFIG_FILE, Path(path), args.overwrite)
+        else:
+            created_file = paths.copy_config_to_search_path(config.__package__, CONFIG_FILE, args.overwrite)
         print("Created " + str(created_file))
 
 

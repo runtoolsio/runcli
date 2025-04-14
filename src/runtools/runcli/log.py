@@ -26,7 +26,7 @@ import sys
 import time
 
 from runtools.runcore import paths
-from runtools.runcli.util import expand_user
+from runtools.runcore.paths import expand_user
 
 runtools_logger = logging.getLogger('runtools')
 runtools_logger.propagate = False

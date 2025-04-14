@@ -201,22 +201,17 @@ def _init_config_parser(subparser):
         help='Print config file content',
         description='Print config file content. Default: prints loaded config from standard locations (e.g., XDG).',
         formatter_class=RichHelpFormatter)
-    print_config_parser.add_argument('-dc', '--def-config', action='store_true',
-                                     help='Show default config file content.')
+    print_config_parser.add_argument(
+        '-dc', '--def-config', action='store_true', help='Show default config file content.')
 
     create_config_parser = config_subparser.add_parser(
         ACTION_CONFIG_CREATE,
         help='Create new config file',
-        description='Create new config file with defaults. Default location: standard user config dir (e.g., XDG_CONFIG_HOME). Fails if exists.', # More concise
+        description='Create new config file with defaults. Default location: standard user config dir (e.g., XDG_CONFIG_HOME).',
         formatter_class=RichHelpFormatter,
         add_help=True)
-    create_config_parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        help="Overwrite if config file exists.")
-    create_config_parser.add_argument(
-        '-p', '--path', type=str,
-        help='Specify path for created config file.')
+    create_config_parser.add_argument('-o', '--overwrite', action='store_true', help='Overwrite if config file exists.')
+    create_config_parser.add_argument('-p', '--path', type=str, help='Specify path for created config file.')
 
 # TODO Consider: change to str (like SortCriteria case) and remove this function
 def _str2_term_status(v):
