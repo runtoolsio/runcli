@@ -1,22 +1,16 @@
 """
 This is a command line interface for the `runjob` library.
 """
-import tomllib
-from pathlib import Path
-from typing import Dict, Any
 
 import sys
 
-import runtools.runcore.util.files
-from . import __version__, cmd, cli, config, log
-from .cli import ACTION_CONFIG
 from runtools.runcore import util, paths
 from runtools.runcore.err import RuntoolsException
 from runtools.runcore.paths import ConfigFileNotFoundError
-from runtools.runcore.util.files import print_file
 from runtools.runcore.util import update_nested_dict
-
-CONFIG_FILE = 'runcli.toml'
+from . import __version__, cmd, cli, log
+from .cfg import CONFIG_FILE
+from .cli import ACTION_CONFIG
 
 
 def main_cli():
@@ -53,82 +47,33 @@ def run_app(args):
     if args_parsed.action == ACTION_CONFIG:
         run_config(args_parsed)
     else:
-        configure_runner(args_parsed)
         run_command(args_parsed)
 
 
 def run_config(args):
     if args.config_action == cli.ACTION_CONFIG_PRINT:
         if getattr(args, 'def_config', False):
-            print_file(packed_config_path())
+            cfg.print_default_config_file()
         else:
-            print_file(paths.lookup_file_in_config_path(CONFIG_FILE))
+            cfg.print_found_config_file()
     elif args.config_action == cli.ACTION_CONFIG_CREATE:
-        if path := getattr(args, 'path'):
-            created_file = runtools.runcore.util.files.copy_config_to_path(config.__package__, CONFIG_FILE, Path(path),
-                                                                           args.overwrite)
-        else:
-            created_file = runtools.runcore.util.files.copy_config_to_search_path(config.__package__, CONFIG_FILE,
-                                                                                  args.overwrite)
-        print("Created " + str(created_file))
+        print("Created " + str(cfg.create_config_file(getattr(args, 'path'), overwrite=args.overwrite)))
 
 
-def read_toml_file(file_path: str) -> Dict[str, Any]:
-    """
-    Reads a TOML file and returns its contents as a dictionary.
-
-    Args:
-        file_path: The path to the TOML file.
-
-    Returns:
-        A dictionary representing the TOML data.
-
-    Raises:
-        FileNotFoundError: If the file_path does not exist.
-        tomllib.TOMLDecodeError: If the file is not valid TOML.
-        # Or potentially other IOErrors
-    """
-    with open(file_path, 'rb') as file:
-        return tomllib.load(file)
-
-
-def configure_runner(args):
-    """Initialize runcli according to provided CLI arguments
-
-    :param args: CLI arguments
-    """
+def run_command(args):
     if getattr(args, 'def_config', False):
-        configuration = {}
+        config = cfg.read_default_configuration()
     else:
-        configuration = read_toml_file(resolve_config_path(args))
-    update_nested_dict(configuration, util.split_params(args.set))  # Override config by `set` args
-    print(configuration)
-    # runner.configure(**configuration)
-    # log.configure(True, 'debug')
+        config = cfg.read_configuration(
+            getattr(args, 'config', None),
+            default_for_missing=not getattr(args, 'requires-config', False)
+        )
+    update_nested_dict(config, util.split_params(args.set))  # Override config by `set` args
 
-
-def packed_config_path():
-    return paths.package_config_path(config.__package__, CONFIG_FILE)
-
-
-def resolve_config_path(args):
-    """
-    Resolve path to the configuration file based on provided CLI arguments.
-
-    Args:
-        args (Namespace): Parsed CLI arguments
-
-    Returns:
-        str: The configuration file path.
-    """
-    if getattr(args, 'config', None):
-        return util.expand_user(args.config)
-
-    if getattr(args, 'def_config', False):
-        return packed_config_path()
-
-    return paths.lookup_file_in_config_path(CONFIG_FILE)
-
-
-def run_command(args_ns):
-    cmd.run(args_ns)
+    log_config = config.get('log', {})
+    log.configure(
+        log_config.get('enabled', True),
+        log_config.get('stdout', {}).get('level', 'warn'),
+        log_config.get('file', {}).get('level', 'info'),
+        log_config.get('file', {}).get('path', None),
+    )

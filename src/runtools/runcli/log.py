@@ -34,13 +34,15 @@ runtools_logger.propagate = False
 log_timing = False
 
 DEF_FORMATTER = logging.Formatter('%(asctime)s - %(levelname)-5s - %(name)s - %(message)s')
+DEF_LEVEL_STDOUT = 'WARN'
+DEF_LEVEL_FILE = 'INFO'
 
 STDOUT_HANDLER_NAME = 'stdout-handler'
 STDERR_HANDLER_NAME = 'stderr-handler'
 FILE_HANDLER_NAME = 'file-handler'
 
 
-def configure(enabled, log_stdout_level='warn', log_file_level='info', log_file_path=None):
+def configure(enabled, log_stdout_level=DEF_LEVEL_STDOUT, log_file_level=DEF_LEVEL_FILE, log_file_path=None):
     runtools_logger.handlers.clear()
     runtools_logger.setLevel(logging.WARNING)
 
@@ -49,17 +51,35 @@ def configure(enabled, log_stdout_level='warn', log_file_level='info', log_file_
         return
 
     if log_stdout_level != 'off':
+        level_error = False
         level = logging.getLevelName(log_stdout_level.upper())
+        if not isinstance(level, int):
+            level = logging.getLevelName(DEF_LEVEL_STDOUT)
+            level_error = True
+
         setup_console(level)
+
         if level < runtools_logger.getEffectiveLevel():
             runtools_logger.setLevel(level)
+        if level_error:
+            runtools_logger.warning(
+                f"[invalid_log_level] type=[stdout] level=[{log_stdout_level}] used_default=[{DEF_LEVEL_STDOUT}]")
 
     if log_file_level != 'off':
+        level_error = False
         level = logging.getLevelName(log_file_level.upper())
+        if not isinstance(level, int):
+            level = logging.getLevelName(DEF_LEVEL_FILE)
+            level_error = True
         log_file_path = expand_user(log_file_path) or paths.log_file_path(create=True)
+
         setup_file(level, log_file_path)
+
         if level < runtools_logger.getEffectiveLevel():
             runtools_logger.setLevel(level)
+        if level_error:
+            runtools_logger.warning(
+                f"[invalid_log_level] type=[file] level=[{log_file_level}] used_default=[{DEF_LEVEL_FILE}]")
 
 
 def is_disabled():
@@ -89,7 +109,10 @@ def get_console_level():
 def setup_file(level, file):
     file_handler = logging.handlers.WatchedFileHandler(file)
     file_handler.set_name(FILE_HANDLER_NAME)
-    file_handler.setLevel(level)
+    try:
+        file_handler.setLevel(level)
+    except ValueError as e:
+        raise InvalidLogLevelError(str(e))
     file_handler.setFormatter(DEF_FORMATTER)
     register_handler(file_handler)
 

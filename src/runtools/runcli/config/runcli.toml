@@ -1,5 +1,5 @@
 [log]
-mode = "off"
+enabled = true
 timing = false
 
 [log.stdout]
