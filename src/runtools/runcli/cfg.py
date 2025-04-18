@@ -9,22 +9,10 @@ from typing import Dict, Any
 
 from runtools.runcli import config
 from runtools.runcore import paths
-from runtools.runcore.err import RuntoolsException
 from runtools.runcore.paths import expand_user, ConfigFileNotFoundError
 from runtools.runcore.util.files import print_file, copy_config_to_path, copy_config_to_search_path
 
 CONFIG_FILE = 'runcli.toml'
-
-
-def validate_log_level(val):
-    if val is None:
-        return None
-
-    str_val = str(val).upper()
-    if str_val not in logging.getLevelNamesMapping():
-        raise InvalidConfigField(f"Invalid log level value `{val}`, valid are: {logging.getLevelNamesMapping().keys()}")
-
-    return str_val
 
 
 def print_default_config_file():
@@ -65,19 +53,17 @@ def _read_toml_file(file_path) -> Dict[str, Any]:
 
 
 def read_default_configuration():
-    return _read_toml_file(_packed_config_path())
+    path = _packed_config_path()
+    return _read_toml_file(path), path
 
 
-def read_configuration(path=None, *, default_for_missing=False):
-    if path:
-        path = expand_user(path)
+def read_configuration(explicit_path=None):
+    if explicit_path:
+        path = expand_user(explicit_path)
     else:
-        try:
-            path = paths.lookup_file_in_config_path(CONFIG_FILE)
-        except ConfigFileNotFoundError as e:
-            if default_for_missing:
-                path = _packed_config_path()
-            else:
-                raise e
+        path = paths.lookup_file_in_config_path(CONFIG_FILE)
 
-    return _read_toml_file(path)
+    try:
+        _read_toml_file(path), path
+    except FileNotFoundError:
+        raise ConfigFileNotFoundError(explicit_path or path)

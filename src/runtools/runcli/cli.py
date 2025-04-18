@@ -1,14 +1,12 @@
 import argparse
 import re
 import textwrap
-from argparse import RawTextHelpFormatter
 
 import sys
-
 from rich_argparse import RichHelpFormatter
 
-from . import __version__
 from runtools.runcore.run import TerminationStatus
+from . import __version__
 
 ACTION_JOB = 'job'
 ACTION_SERVICE = 'service'
@@ -62,7 +60,7 @@ def init_cfg_parent_parser():
     """
     cfg_group.add_argument('-dc', '--def-config', action='store_true',
                            help='Do not lookup config file and use default configuration instead.')
-    cfg_group.add_argument('-rc', '--requires-config', action='store_true',
+    cfg_group.add_argument('-cr', '--config-required', action='store_true',
                            help='Configuration file must be present, otherwise the command will fail')
     cfg_group.add_argument('-C', '--config', type=str,
                            help='Specifies path to config file stored in custom location.')

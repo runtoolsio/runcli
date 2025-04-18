@@ -1,6 +1,7 @@
 """
 This is a command line interface for the `runjob` library.
 """
+import logging
 
 import sys
 
@@ -11,6 +12,8 @@ from runtools.runcore.util import update_nested_dict
 from . import __version__, cmd, cli, log
 from .cfg import CONFIG_FILE
 from .cli import ACTION_CONFIG
+
+logger = logging.getLogger(__name__)
 
 
 def main_cli():
@@ -61,13 +64,21 @@ def run_config(args):
 
 
 def run_command(args):
+    cfg_found = True
     if getattr(args, 'def_config', False):
-        config = cfg.read_default_configuration()
+        config, cfg_path = cfg.read_default_configuration()
     else:
-        config = cfg.read_configuration(
-            getattr(args, 'config', None),
-            default_for_missing=not getattr(args, 'requires-config', False)
-        )
+        if explicit_cfg := getattr(args, 'config', None):
+            config, cfg_path = cfg.read_configuration(explicit_cfg)
+        else:
+            try:
+                config, cfg_path = cfg.read_configuration()
+            except ConfigFileNotFoundError as e:
+                if getattr(args, 'config_required', False):
+                    raise e
+                else:
+                    cfg_found = False
+                    config, cfg_path = cfg.read_default_configuration()
     update_nested_dict(config, util.split_params(args.set))  # Override config by `set` args
 
     log_config = config.get('log', {})
@@ -77,3 +88,7 @@ def run_command(args):
         log_config.get('file', {}).get('level', 'info'),
         log_config.get('file', {}).get('path', None),
     )
+    if cfg_found:
+        logger.info(f"[configuration_loaded] source=[{cfg_path}]")
+    else:
+        logger.warning(f"[fallback_configuration_loaded] fallback_source=[{cfg_path}] reason=[config_file_not_found]")
