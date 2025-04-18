@@ -9,7 +9,7 @@ from runtools.runcore import util, paths
 from runtools.runcore.err import RuntoolsException
 from runtools.runcore.paths import ConfigFileNotFoundError
 from runtools.runcore.util import update_nested_dict
-from . import __version__, cmd, cli, log
+from . import __version__, cmd, cli, log, job
 from .cfg import CONFIG_FILE
 from .cli import ACTION_CONFIG
 
@@ -92,3 +92,5 @@ def run_command(args):
         logger.info(f"[configuration_loaded] source=[{cfg_path}]")
     else:
         logger.warning(f"[fallback_configuration_loaded] fallback_source=[{cfg_path}] reason=[config_file_not_found]")
+
+    job.run(args)
