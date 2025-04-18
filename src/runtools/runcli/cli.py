@@ -242,8 +242,8 @@ def _check_config_option_conflicts(parser, parsed):
     config_options = []
     if hasattr(parsed, 'def_config') and parsed.def_config:
         config_options.append('def_config')
-    if hasattr(parsed, 'min_config') and parsed.min_config:
-        config_options.append('min_config')
+    if hasattr(parsed, 'config_required') and parsed.config_required:
+        config_options.append('config_required')
     if hasattr(parsed, 'config') and parsed.config:
         config_options.append('config')
 
