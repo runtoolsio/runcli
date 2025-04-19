@@ -25,15 +25,15 @@ def parse_args(args):
         "-V",
         "--version",
         action='version',
-        help="Show version of runcli and exit",
+        help="Show version of this app and exit",
         version=__version__.__version__)
 
     parent = init_cfg_parent_parser()
     subparser = parser.add_subparsers(dest='action')  # command/action
 
+    _init_config_parser(subparser)
     _init_job_parser(parent, subparser)
     _init_clean_parser(parent, subparser)
-    _init_config_parser(subparser)
 
     parsed = parser.parse_args(args)
     if not getattr(parsed, 'action', None):
@@ -52,20 +52,18 @@ def init_cfg_parent_parser():
     parser = argparse.ArgumentParser()
     cfg_group = parser.add_argument_group("Configuration options")
     cfg_group.description = """
-        These options affects the way how the configuration is loaded and set.
-        By default the configuration file located in one of the XDG directories is loaded and its content
-        overrides values of the cfg module. Changing this default behaviour is not needed under normal usage.
-        Therefore these options are usually used only during testing, experimenting and debugging.
-        More details in the config doc: https://github.com/taro-suite/taro/blob/master/CONFIG.md
+        These options control how configuration is loaded. By default, runtools  searches for its configuration file 
+        in standard XDG directories and loads settings from the first found file. If no config is found 
+        then default one is used. These options allow you to modify this default behavior.
     """
     cfg_group.add_argument('-dc', '--def-config', action='store_true',
                            help='Do not lookup config file and use default configuration instead.')
     cfg_group.add_argument('-cr', '--config-required', action='store_true',
-                           help='Configuration file must be present, otherwise the command will fail')
+                           help='Configuration file must be found, otherwise the command will fail. (No fallback)')
     cfg_group.add_argument('-C', '--config', type=str,
-                           help='Specifies path to config file stored in custom location.')
+                           help="Specifies path to config file stored in custom location. Fails if the file doesn't exist.")
     cfg_group.add_argument('--set', type=str, action='append',
-                           help='Override value of config attribute. Format: attribute=value.')
+                           help='Override value of config attribute. Format: attribute=value. Example: log.stdout.level=info')
     return parser
 
 
