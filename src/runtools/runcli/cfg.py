@@ -64,6 +64,6 @@ def read_configuration(explicit_path=None):
         path = paths.lookup_file_in_config_path(CONFIG_FILE)
 
     try:
-        _read_toml_file(path), path
+        return _read_toml_file(path), path
     except FileNotFoundError:
         raise ConfigFileNotFoundError(explicit_path or path)

@@ -67,15 +67,16 @@ def init_cfg_parent_parser():
     return parser
 
 
-def _init_job_parser(parent, subparsers):
+def _init_job_parser(parent, subparser):
     """
     Creates parser for `job` command
 
-    :param parent: parent parser
-    :param subparsers: sub-parser for job parser to be added to
+    Args:
+        parent: parent parser (config options)
+        subparser: sub-parser for job parser to be added to
     """
 
-    job_parser = subparsers.add_parser(
+    job_parser = subparser.add_parser(
         ACTION_JOB,
         parents=[parent],
         description='Execute command',
