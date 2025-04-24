@@ -9,7 +9,7 @@ level = "warn"
 level = "info"
 # path = "~/.cache/runcore/runcli.log"
 
-[[persistence]]
+[persistence]
 type = "sqlite"
 enabled = true
 # database = "~/.local/share/runcore/jobs.db"

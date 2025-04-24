@@ -2,7 +2,6 @@
 Config util
 For more information read: https://github.com/tarotools/taro-core/blob/master/docs/CONFIG.md
 """
-import logging
 import tomllib
 from pathlib import Path
 from typing import Dict, Any
