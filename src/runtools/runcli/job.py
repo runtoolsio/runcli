@@ -1,5 +1,5 @@
 from runtools.runcore.job import InstanceID
-from runtools.runjob import environment
+from runtools.runjob import node
 from runtools.runjob.program import ProgramPhase
 
 
