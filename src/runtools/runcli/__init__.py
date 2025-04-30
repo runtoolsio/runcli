@@ -5,7 +5,8 @@ import logging
 
 import sys
 
-from runtools.runcore import util, paths
+from runtools.runcore import util
+from runtools.runcore.env import DEFAULT_ENVIRONMENT
 from runtools.runcore.err import RuntoolsException
 from runtools.runcore.paths import ConfigFileNotFoundError
 from runtools.runcore.util import update_nested_dict
@@ -13,7 +14,12 @@ from . import __version__, cmd, cli, log, job
 from .cfg import CONFIG_FILE
 from .cli import ACTION_CONFIG
 
+from rich.console import Console
+from rich.text import Text
+
 logger = logging.getLogger(__name__)
+
+console = Console(stderr=True)
 
 
 def main_cli():
@@ -38,7 +44,7 @@ def main(args):
                   "or use `-dc` option to execute using default config", file=sys.stderr)
         exit(1)
     except RuntoolsException as e:
-        print("User error: " + str(e), file=sys.stderr)
+        console.print(Text().append("User error: ", style="bold red").append(str(e)))
         exit(1)
     except KeyboardInterrupt:
         exit(130)
@@ -93,4 +99,5 @@ def run_command(args):
     else:
         logger.warning(f"[fallback_configuration_loaded] fallback_source=[{cfg_path}] reason=[config_file_not_found]")
 
-    job.run(args)
+    def_env = config.get('environments', {'default': DEFAULT_ENVIRONMENT}).get('default', DEFAULT_ENVIRONMENT)
+    job.run(def_env, args)

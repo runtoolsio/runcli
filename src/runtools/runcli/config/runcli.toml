@@ -8,3 +8,6 @@ level = "warn"
 [log.file]
 level = "info"
 # path = "~/.cache/runcore/runcli.log"
+
+[environments]
+default = "main"

@@ -90,6 +90,8 @@ def _init_job_parser(parent, subparser):
             
         It is recommended to use the `--id` option to specify the ID of the job otherwise the ID is constructed from the 
         command and its arguments. """)
+    job_parser.add_argument('-e', '--env', type=str,
+                            help="Environment ID where job will run. Uses default from config if not specified.")
     job_parser.add_argument('--id', type=str,
                             help='Job ID. Identifies task type. Default: derived from command. '
                                  'Recommended to set explicitly.')
