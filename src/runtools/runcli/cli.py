@@ -79,7 +79,8 @@ def _init_job_parser(parent, subparser):
     job_parser = subparser.add_parser(
         ACTION_JOB,
         parents=[parent],
-        description='Execute command',
+        description='Execute managed batch or long-running job',
+        help='Execute managed batch or long-running job',
         formatter_class=RichHelpFormatter,
         add_help=False)
 
