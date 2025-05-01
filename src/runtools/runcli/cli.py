@@ -104,8 +104,8 @@ def _init_job_parser(parent, subparser):
                                  'and resend to standard streams. When this option is used taro does not capture '
                                  'the output from the job streams. This disables output based features, but it '
                                  'can help if there is any problem with output processing.')
-    job_parser.add_argument('-o', '--no-overlap', action='store_true', default=False,
-                            help='Skip if job with the same job ID is already running')
+    job_parser.add_argument('-x', '--exclusive-run', action='store_true', default=False,
+                            help='Terminate this job if another with the same job ID is already running')
     job_parser.add_argument('-s', '--serial', action='store_true', default=False,
                             help='The execution will wait while there is a running job with the same job ID or a job '
                                  'belonging to the same execution group (if specified). As the name implies, '
