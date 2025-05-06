@@ -101,6 +101,16 @@ def load_config_and_log_setup(instance_id, args):
     return config
 
 
+def configure_logging(config):
+    log_config = config.get('log', {})
+    log.configure(
+        log_config.get('enabled', True),
+        log_config.get('stdout', {}).get('level', 'warn'),
+        log_config.get('file', {}).get('level', 'info'),
+        log_config.get('file', {}).get('path', None),
+    )
+
+
 def get_env_config(args, config, instance_id) -> EnvironmentConfigUnion:
     def_env_id = config.get('environments', {'default': DEFAULT_LOCAL_ENVIRONMENT}).get('default', DEFAULT_LOCAL_ENVIRONMENT)
     env_id = getattr(args, 'env') or def_env_id
@@ -116,13 +126,3 @@ def get_env_config(args, config, instance_id) -> EnvironmentConfigUnion:
                     f"reason=[No config for `{env_id}` env found]")
 
     return env.env_config_from_dict(env_config)
-
-
-def configure_logging(config):
-    log_config = config.get('log', {})
-    log.configure(
-        log_config.get('enabled', True),
-        log_config.get('stdout', {}).get('level', 'warn'),
-        log_config.get('file', {}).get('level', 'info'),
-        log_config.get('file', {}).get('path', None),
-    )
