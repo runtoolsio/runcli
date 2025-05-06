@@ -68,8 +68,9 @@ def run_job(args):
     instance_id = InstanceID(job_id, getattr(args, 'run_id'))
     config = load_config_and_log_setup(instance_id, args)
     env_config = get_env_config(args, config, instance_id)
+    program_args = [args.command] + args.arg
 
-    job.run(instance_id, env_config, args)
+    job.run(instance_id, env_config, program_args, excl=args.exclusive_run)
 
 
 def load_config_and_log_setup(instance_id, args):

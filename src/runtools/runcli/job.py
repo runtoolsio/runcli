@@ -3,17 +3,17 @@ from runtools.runjob.coord import MutualExclusionPhase
 from runtools.runjob.program import ProgramPhase
 
 
-def run(instance_id, env_config, args):
-    # TODO Log term status
+def run(instance_id, env_config, program_args, *, excl=False):
+    phases = create_phases(instance_id, program_args, excl)
     with node.create(env_config) as env_node:
-        env_node.create_instance(instance_id, create_phases(instance_id.job_id, args)).run()
+        env_node.create_instance(instance_id, phases).run()
 
 
-def create_phases(job_id, args):
+def create_phases(instance_id, program_args, excl):
     phases = []
-    program_phase = ProgramPhase('PROGRAM', *([args.command] + args.arg))
-    if args.exclusive_run:
-        phases.append(MutualExclusionPhase(job_id, program_phase))
+    program_phase = ProgramPhase('PROGRAM', *program_args)
+    if excl:
+        phases.append(MutualExclusionPhase(instance_id.job_id, program_phase))
     else:
         phases.append(program_phase)
     return phases
