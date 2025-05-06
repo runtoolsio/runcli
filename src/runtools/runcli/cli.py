@@ -105,6 +105,9 @@ def _init_job_parser(parent, subparser):
                                  'and resend to standard streams. When this option is used taro does not capture '
                                  'the output from the job streams. This disables output based features, but it '
                                  'can help if there is any problem with output processing.')
+    job_parser.add_argument('-A', '--approve',
+                            help='Adds approval phase. Job waits in pending state until explicitly approved '
+                                 'before continuing execution.')
     job_parser.add_argument('-x', '--exclusive-run', action='store_true', default=False,
                             help='Terminate this job if another with the same job ID is already running')
     job_parser.add_argument('-s', '--serial', action='store_true', default=False,
@@ -126,9 +129,6 @@ def _init_job_parser(parent, subparser):
                                  'for all jobs belonging to the same execution queue can be specified using the '
                                  '`--serial` or `max-executions` options. If an execution queue is not set then '
                                  'it defaults to the job ID.')
-    job_parser.add_argument('-A', '--approve', action='store_true', default=False,
-                            help='Specifies pending group. The job will wait before execution in pending state'
-                                 'until the group receives releasing signal. See the `release` command.')
     job_parser.add_argument('--warn-time', type=_warn_time_type, action='append', default=[],
                             help='This enables time warning which is trigger when the execution of the job exceeds '
                                  'the period specified by the value of this option. The value must be an integer '

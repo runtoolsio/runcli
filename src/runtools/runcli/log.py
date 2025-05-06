@@ -35,7 +35,9 @@ runtools_logger.propagate = False
 
 log_timing = False
 
-DEF_FORMATTER = logging.Formatter('%(asctime)s - %(levelname)-5s - %(name)s - %(message)s')
+DEF_FORMATTER_STD = logging.Formatter('%(levelname)s - %(message)s')
+DEF_FORMATTER_FILE = logging.Formatter('%(asctime)s - %(levelname)-5s - %(name)s - %(message)s')
+
 DEF_LEVEL_STDOUT = 'WARN'
 DEF_LEVEL_FILE = 'INFO'
 
@@ -92,14 +94,14 @@ def setup_console(level):
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.set_name(STDOUT_HANDLER_NAME)
     stdout_handler.setLevel(level)
-    stdout_handler.setFormatter(DEF_FORMATTER)
+    stdout_handler.setFormatter(DEF_FORMATTER_STD)
     stdout_handler.addFilter(lambda record: record.levelno <= logging.INFO)
     register_handler(stdout_handler)
 
     stderr_handler = logging.StreamHandler(sys.stderr)
     stderr_handler.set_name(STDERR_HANDLER_NAME)
     stderr_handler.setLevel(level)
-    stderr_handler.setFormatter(DEF_FORMATTER)
+    stderr_handler.setFormatter(DEF_FORMATTER_STD)
     stderr_handler.addFilter(lambda record: record.levelno > logging.INFO)
     register_handler(stderr_handler)
 
@@ -115,7 +117,7 @@ def setup_file(level, file):
         file_handler.setLevel(level)
     except ValueError as e:
         raise InvalidLogLevelError(str(e))
-    file_handler.setFormatter(DEF_FORMATTER)
+    file_handler.setFormatter(DEF_FORMATTER_FILE)
     register_handler(file_handler)
 
 
