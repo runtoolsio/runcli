@@ -7,7 +7,7 @@ level = "warn"
 
 [log.file]
 level = "info"
-# path = "~/.cache/runcore/runcli.log"
+# path = "~/.cache/runtools/runcli.log"
 
 [environments]
 default = "main"

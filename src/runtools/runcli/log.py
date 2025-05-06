@@ -28,6 +28,8 @@ import time
 from runtools.runcore import paths
 from runtools.runcore.paths import expand_user
 
+LOG_FILENAME = 'runcli.log'
+
 runtools_logger = logging.getLogger('runtools')
 runtools_logger.propagate = False
 
@@ -71,7 +73,7 @@ def configure(enabled, log_stdout_level=DEF_LEVEL_STDOUT, log_file_level=DEF_LEV
         if not isinstance(level, int):
             level = logging.getLevelName(DEF_LEVEL_FILE)
             level_error = True
-        log_file_path = expand_user(log_file_path) or paths.log_file_path(create=True)
+        log_file_path = expand_user(log_file_path) or (paths.log_file_dir(create=True) / LOG_FILENAME)
 
         setup_file(level, log_file_path)
 
