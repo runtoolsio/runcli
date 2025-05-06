@@ -95,9 +95,9 @@ def load_config_and_log_setup(instance_id, args):
     configure_logging(config)
 
     if cfg_found:
-        logger.info(f"[configuration_loaded] instance=[{instance_id}] source=[{cfg_path}]")
+        logger.info(f"configuration_loaded instance=[{instance_id}] source=[{cfg_path}]")
     else:
-        logger.warning(f"[fallback_configuration_loaded] instance=[{instance_id}] fallback_source=[{cfg_path}] reason=[config_file_not_found]")
+        logger.warning(f"fallback_configuration_loaded instance=[{instance_id}] fallback_source=[{cfg_path}] reason=[config_file_not_found]")
 
     return config
 
@@ -117,13 +117,13 @@ def get_env_config(args, config, instance_id) -> EnvironmentConfigUnion:
     env_id = getattr(args, 'env') or def_env_id
     try:
         env_config, env_config_path = env.load_env_config(env_id)
-        logger.info(f"[environment_config_loaded] instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}]")
+        logger.info(f"environment_config_loaded instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}]")
     except (ConfigFileNotFoundError, EnvironmentNotFoundError) as e:
         if getattr(args, 'config_required', False) or env_id != DEFAULT_LOCAL_ENVIRONMENT:
             logger.error(f"[environment_config_not_found] instance=[{instance_id}] env=[{env_id}]")
             raise e
         env_config, env_config_path = env.load_env_default_config(env_id)
-        logger.info(f"[environment_default_config_loaded] instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}] "
+        logger.info(f"environment_default_config_loaded instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}] "
                     f"reason=[No config for `{env_id}` env found]")
 
     return env.env_config_from_dict(env_config)
