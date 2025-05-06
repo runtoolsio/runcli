@@ -66,13 +66,13 @@ def run_config(args):
 def run_job(args):
     job_id = args.id or " ".join([args.command.removeprefix('./')] + args.arg)
     instance_id = InstanceID(job_id, getattr(args, 'run_id'))
-    config = load_config(instance_id, args)
+    config = load_config_and_log_setup(instance_id, args)
     env_config = get_env_config(args, config, instance_id)
 
     job.run(instance_id, env_config, args)
 
 
-def load_config(instance_id, args):
+def load_config_and_log_setup(instance_id, args):
     cfg_found = True
     if getattr(args, 'def_config', False):
         config, cfg_path = cfg.read_default_configuration()
