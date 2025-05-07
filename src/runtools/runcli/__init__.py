@@ -72,7 +72,10 @@ def run_job(args):
     approve_id = getattr(args, 'approve')
 
     job.run(instance_id, env_config, program_args,
-            excl=args.exclusive_run, approve_id=approve_id, serial=args.serial)
+            bypass_output=args.bypass_output,
+            excl=args.exclusive_run,
+            approve_id=approve_id,
+            serial=args.serial)
 
 
 def load_config_and_log_setup(instance_id, args):
@@ -115,7 +118,8 @@ def configure_logging(config):
 
 
 def get_env_config(args, config, instance_id) -> EnvironmentConfigUnion:
-    def_env_id = config.get('environments', {'default': DEFAULT_LOCAL_ENVIRONMENT}).get('default', DEFAULT_LOCAL_ENVIRONMENT)
+    def_env_id = config.get('environments', {'default': DEFAULT_LOCAL_ENVIRONMENT}).get('default',
+                                                                                        DEFAULT_LOCAL_ENVIRONMENT)
     env_id = getattr(args, 'env') or def_env_id
     try:
         env_config, env_config_path = env.load_env_config(env_id)
@@ -125,7 +129,8 @@ def get_env_config(args, config, instance_id) -> EnvironmentConfigUnion:
             logger.error(f"environment_config_not_found instance=[{instance_id}] env=[{env_id}]")
             raise e
         env_config, env_config_path = env.load_env_default_config(env_id)
-        logger.info(f"environment_default_config_loaded instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}] "
-                    f"reason=[No config for `{env_id}` env found]")
+        logger.info(
+            f"environment_default_config_loaded instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}] "
+            f"reason=[No config for `{env_id}` env found]")
 
     return env.env_config_from_dict(env_config)
