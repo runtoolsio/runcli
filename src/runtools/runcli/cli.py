@@ -109,7 +109,8 @@ def _init_job_parser(parent, subparser):
                             help='Adds approval phase. Job waits in pending state until explicitly approved '
                                  'before continuing execution.')
     job_parser.add_argument('-x', '--exclusive-run', action='store_true', default=False,
-                            help='Terminate this job if another with the same job ID is already running')
+                            help='Terminate this job with `OVERLAP` status if another with the same job ID '
+                                 'is already running')
     job_parser.add_argument('-s', '--serial', action='store_true', default=False,
                             help='The execution will wait while there is a running job with the same job ID or a job '
                                  'belonging to the same execution group (if specified). As the name implies, '
@@ -247,3 +248,7 @@ def _check_config_option_conflicts(parser, parsed):
 
     if len(config_options) > 1:
         parser.error('Conflicting config options: ' + str(config_options))
+
+    if hasattr(parsed, 'exclusive_run') and parsed.exclusive_run and \
+            hasattr(parsed, 'serial') and parsed.serial:
+        parser.error('Conflicting execution options: `exclusive-run` cannot be used with `serial`')

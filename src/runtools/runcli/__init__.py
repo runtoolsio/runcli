@@ -71,7 +71,8 @@ def run_job(args):
     program_args = [args.command] + args.arg
     approve_id = getattr(args, 'approve')
 
-    job.run(instance_id, env_config, program_args, excl=args.exclusive_run, approve_id=approve_id)
+    job.run(instance_id, env_config, program_args,
+            excl=args.exclusive_run, approve_id=approve_id, serial=args.serial)
 
 
 def load_config_and_log_setup(instance_id, args):
@@ -97,7 +98,8 @@ def load_config_and_log_setup(instance_id, args):
     if cfg_found:
         logger.info(f"configuration_loaded instance=[{instance_id}] source=[{cfg_path}]")
     else:
-        logger.warning(f"fallback_configuration_loaded instance=[{instance_id}] fallback_source=[{cfg_path}] reason=[config_file_not_found]")
+        logger.warning(f"fallback_configuration_loaded instance=[{instance_id}] fallback_source=[{cfg_path}] "
+                       f"reason=[Config file not found in search paths]")
 
     return config
 
@@ -120,7 +122,7 @@ def get_env_config(args, config, instance_id) -> EnvironmentConfigUnion:
         logger.info(f"environment_config_loaded instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}]")
     except (ConfigFileNotFoundError, EnvironmentNotFoundError) as e:
         if getattr(args, 'config_required', False) or env_id != DEFAULT_LOCAL_ENVIRONMENT:
-            logger.error(f"[environment_config_not_found] instance=[{instance_id}] env=[{env_id}]")
+            logger.error(f"environment_config_not_found instance=[{instance_id}] env=[{env_id}]")
             raise e
         env_config, env_config_path = env.load_env_default_config(env_id)
         logger.info(f"environment_default_config_loaded instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}] "

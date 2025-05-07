@@ -10,4 +10,4 @@ level = "info"
 # path = "~/.cache/runtools/runcli.log"
 
 [environments]
-default = "main"
+default = "local"
