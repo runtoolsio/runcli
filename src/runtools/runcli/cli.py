@@ -118,7 +118,7 @@ def _init_job_parser(parent, subparser):
                                  '--no-overlap is that this option will not terminate the current job when a related '
                                  'job is executing, but puts this job in a waiting state instead. This option is a '
                                  'shortcut for the --max-executions 1 option (see help for more details).')
-    job_parser.add_argument('-m', '--max-executionsPP', type=int, default=0,
+    job_parser.add_argument('-m', '--max-executions', type=int, default=0,
                             help='This option restricts the maximum number of parallel executions of the same job or '
                                  'jobs from the same execution group (if specified). If the current number of '
                                  'related executions prevents this job from being executed, then the job is put in a '
@@ -231,23 +231,15 @@ def _check_conditions(parser, parsed):
 
 
 def _check_config_option_conflicts(parser, parsed):
+    """Check that incompatible combinations of options were not used.
+
+    Args:
+        parser: The argument parser instance.
+        parsed: The parsed arguments object.
     """
-    Check that incompatible combinations of options were not used
+    config_options = [opt for opt in ['def_config', 'config_required', 'config'] if getattr(parsed, opt)]
+    exec_options = [opt for opt in ['exclusive_run', 'serial', 'max_executions'] if getattr(parsed, opt)]
 
-    :param parser: parser
-    :param parsed: parsed arguments
-    """
-    config_options = []
-    if hasattr(parsed, 'def_config') and parsed.def_config:
-        config_options.append('def_config')
-    if hasattr(parsed, 'config_required') and parsed.config_required:
-        config_options.append('config_required')
-    if hasattr(parsed, 'config') and parsed.config:
-        config_options.append('config')
-
-    if len(config_options) > 1:
-        parser.error('Conflicting config options: ' + str(config_options))
-
-    if hasattr(parsed, 'exclusive_run') and parsed.exclusive_run and \
-            hasattr(parsed, 'serial') and parsed.serial:
-        parser.error('Conflicting execution options: `exclusive-run` cannot be used with `serial`')
+    for conflict_options in config_options, exec_options:
+        if conflict_options:
+            parser.error("Conflicting options: " + " & ".join(conflict_options))
