@@ -107,9 +107,12 @@ def _init_job_parser(parent, subparser):
     job_parser.add_argument('-A', '--approve', metavar='PHASE_ID',
                             help='Adds approval phase with specified ID. Job waits in pending state until explicitly '
                                  'approved via API or CLI. ID is used to reference the approval for release commands.')
-    job_parser.add_argument('-x', '--exclusive-run', action='store_true', default=False,
-                            help='Terminate this job with `OVERLAP` status if another with the same job ID '
-                                 'is already running')
+    job_parser.add_argument('-x', '--excl-run', action='store_true', default=False,
+                            help='Terminate this job with `OVERLAP` status if another job in the same exclusion group '
+                                 'is already running. The job ID is used as the default exclusion group.')
+    job_parser.add_argument('--excl-group', type=str,
+                            help='Enables `--excl-run` and sets explicit exclusion group ID. Jobs with the same '
+                                 'exclusion group cannot run simultaneously.')
     job_parser.add_argument('-s', '--serial', action='store_true', default=False,
                             help='The execution will wait while there is a running job with the same job ID or a job '
                                  'belonging to the same execution group (if specified). As the name implies, '
@@ -238,8 +241,7 @@ def _check_config_option_conflicts(parser, parsed):
         parsed: The parsed arguments object.
     """
     config_options = [opt for opt in ['def_config', 'config_required', 'config'] if getattr(parsed, opt)]
-    exec_options = [opt for opt in ['exclusive_run', 'serial', 'max_executions'] if getattr(parsed, opt)]
 
-    for conflict_options in config_options, exec_options:
+    for conflict_options in config_options, []:
         if len(conflict_options) > 1:
             parser.error("Conflicting options: " + " & ".join(conflict_options))

@@ -73,7 +73,8 @@ def run_job(args):
 
     job.run(instance_id, env_config, program_args,
             bypass_output=args.bypass_output,
-            excl=args.exclusive_run,
+            excl=args.excl_run,
+            excl_group=getattr(args, 'excl_group'),
             approve_id=approve_id,
             serial=args.serial)
 
