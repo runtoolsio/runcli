@@ -21,7 +21,7 @@ def create_phases(instance_id, program_args, bypass_output, excl, approve_id, se
 
     program_phase = ProgramPhase('PROGRAM', *program_args, read_output=not bypass_output)
     if excl:
-        phases.append(MutualExclusionPhase(instance_id.job_id, program_phase))
+        phases.append(MutualExclusionPhase('MUTEX_GUARD', program_phase, exclusion_group=instance_id.job_id))
     elif serial:
         phases.append(ExecutionQueue('QUEUE', ExecutionGroup(instance_id.job_id, 1), program_phase))
     else:

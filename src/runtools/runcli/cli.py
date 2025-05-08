@@ -241,5 +241,5 @@ def _check_config_option_conflicts(parser, parsed):
     exec_options = [opt for opt in ['exclusive_run', 'serial', 'max_executions'] if getattr(parsed, opt)]
 
     for conflict_options in config_options, exec_options:
-        if conflict_options:
+        if len(conflict_options) > 1:
             parser.error("Conflicting options: " + " & ".join(conflict_options))
