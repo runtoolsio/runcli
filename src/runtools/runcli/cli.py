@@ -114,24 +114,15 @@ def _init_job_parser(parent, subparser):
                             help='Enables `--excl-run` and sets explicit exclusion group ID. Jobs with the same '
                                  'exclusion group cannot run simultaneously.')
     job_parser.add_argument('-s', '--serial', action='store_true', default=False,
-                            help='The execution will wait while there is a running job with the same job ID or a job '
-                                 'belonging to the same execution group (if specified). As the name implies, '
-                                 'this is used to achieve serial execution of the same (or same group of) jobs, '
-                                 'i.e., to prevent parallel execution. The difference between this option and '
-                                 '--no-overlap is that this option will not terminate the current job when a related '
-                                 'job is executing, but puts this job in a waiting state instead. This option is a '
-                                 'shortcut for the --max-executions 1 option (see help for more details).')
-    job_parser.add_argument('-m', '--max-executions', type=int, default=0,
-                            help='This option restricts the maximum number of parallel executions of the same job or '
-                                 'jobs from the same execution group (if specified). If the current number of '
-                                 'related executions prevents this job from being executed, then the job is put in a '
-                                 'waiting state and resumed when the number of executions decreases. If there are '
-                                 'more jobs waiting, the earlier ones have priority.')
-    job_parser.add_argument('-q', '--queue-id', type=str,
-                            help='Sets the queue ID for the job. The maximum number of simultaneous executions '
-                                 'for all jobs belonging to the same execution queue can be specified using the '
-                                 '`--serial` or `max-executions` options. If an execution queue is not set then '
-                                 'it defaults to the job ID.')
+                            help='Run jobs one at a time. Jobs with same job ID or concurrent group ID wait in queue. '
+                                 'Unlike --no-overlap, this puts job in waiting state instead of terminating it. '
+                                 'Shortcut for --max-concurrent 1.')
+    job_parser.add_argument('-m', '--max-concurrent', type=int, default=0,
+                            help='Limit concurrent executions. Jobs wait in queue when limit reached. '
+                                 'Applies to jobs with same ID or concurrent group ID. Queue uses FIFO order.')
+    job_parser.add_argument('-g', '--concurrency-group', type=str,
+                            help='Set concurrency group ID. Default: job ID. '
+                                 'Used with --serial or --max-concurrent to limit concurrency across different jobs.')
     job_parser.add_argument('--warn-time', type=_warn_time_type, action='append', default=[],
                             help='This enables time warning which is trigger when the execution of the job exceeds '
                                  'the period specified by the value of this option. The value must be an integer '
@@ -234,14 +225,18 @@ def _check_conditions(parser, parsed):
 
 
 def _check_config_option_conflicts(parser, parsed):
-    """Check that incompatible combinations of options were not used.
+    """Check that invalid combinations of options were not used.
 
     Args:
         parser: The argument parser instance.
         parsed: The parsed arguments object.
     """
     config_options = [opt for opt in ['def_config', 'config_required', 'config'] if getattr(parsed, opt)]
+    concurrency_options = [opt for opt in ['serial', 'max_concurrent'] if getattr(parsed, opt)]
 
-    for conflict_options in config_options, []:
+    for conflict_options in config_options, concurrency_options:
         if len(conflict_options) > 1:
             parser.error("Conflicting options: " + " & ".join(conflict_options))
+
+    if getattr(parsed, 'concurrency_group') and not (getattr(parsed, 'serial') or getattr(parsed, 'max_concurrent')):
+        parser.error("--`concurrency-group` must be used with either `--serial` or `--max-concurrent` > 0")

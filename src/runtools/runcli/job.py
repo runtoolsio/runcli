@@ -1,5 +1,5 @@
 from runtools.runjob import node
-from runtools.runjob.coord import MutualExclusionPhase, ApprovalPhase, ExecutionQueue, ExecutionGroup
+from runtools.runjob.coord import MutualExclusionPhase, ApprovalPhase, ExecutionQueue, ConcurrencyGroup
 from runtools.runjob.program import ProgramPhase
 
 
@@ -23,7 +23,7 @@ def create_phases(instance_id, program_args, bypass_output, excl, excl_group, ap
     if excl or excl_group:
         phases.append(MutualExclusionPhase('MUTEX_GUARD', program_phase, exclusion_group=excl_group))
     elif serial:
-        phases.append(ExecutionQueue('QUEUE', ExecutionGroup(instance_id.job_id, 1), program_phase))
+        phases.append(ExecutionQueue('QUEUE', ConcurrencyGroup(instance_id.job_id, 1), program_phase))
     else:
         phases.append(program_phase)
     return phases
