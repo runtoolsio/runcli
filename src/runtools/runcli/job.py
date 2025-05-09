@@ -4,15 +4,23 @@ from runtools.runjob.program import ProgramPhase
 
 
 def run(instance_id, env_config, program_args, *,
-        bypass_output=False, excl=False, excl_group=None, approve_id=None, serial=False):
-    phases = create_phases(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial)
+        bypass_output=False,
+        excl=False,
+        excl_group=None,
+        approve_id=None,
+        serial=False,
+        max_concurrent=0,
+        concurrency_group=None):
+    phases = create_phases(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial,
+                           max_concurrent, concurrency_group)
     with node.create(env_config) as env_node:
         env_node.create_instance(instance_id, phases).run()
 
 
-def create_phases(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial):
-    if excl and serial:
-        raise ValueError("Exclusive run cannot be used with serial")
+def create_phases(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial, max_concurrent,
+                  concurrency_group):
+    if serial and max_concurrent:
+        raise ValueError("Either `serial` or `max_concurrent` can be set")
 
     phases = []
 
@@ -21,9 +29,13 @@ def create_phases(instance_id, program_args, bypass_output, excl, excl_group, ap
 
     program_phase = ProgramPhase('PROGRAM', *program_args, read_output=not bypass_output)
     if excl or excl_group:
-        phases.append(MutualExclusionPhase('MUTEX_GUARD', program_phase, exclusion_group=excl_group))
-    elif serial:
-        phases.append(ExecutionQueue('QUEUE', ConcurrencyGroup(instance_id.job_id, 1), program_phase))
+        exec_phase = MutualExclusionPhase('MUTEX_GUARD', program_phase, exclusion_group=excl_group)
     else:
-        phases.append(program_phase)
+        exec_phase = program_phase
+    if serial or max_concurrent:
+        phases.append(
+            ExecutionQueue('QUEUE', ConcurrencyGroup(concurrency_group or instance_id.job_id, max_concurrent or 1),
+                           exec_phase))
+    else:
+        phases.append(exec_phase)
     return phases

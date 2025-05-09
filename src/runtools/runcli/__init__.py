@@ -71,12 +71,16 @@ def run_job(args):
     program_args = [args.command] + args.arg
     approve_id = getattr(args, 'approve')
 
-    job.run(instance_id, env_config, program_args,
-            bypass_output=args.bypass_output,
-            excl=args.excl_run,
-            excl_group=getattr(args, 'excl_group'),
-            approve_id=approve_id,
-            serial=args.serial)
+    job.run(
+        instance_id, env_config, program_args,
+        bypass_output=args.bypass_output,
+        excl=args.excl_run,
+        excl_group=getattr(args, 'excl_group'),
+        approve_id=approve_id,
+        serial=args.serial,
+        max_concurrent=args.max_concurrent,
+        concurrency_group=getattr(args, 'concurrency_group')
+    )
 
 
 def load_config_and_log_setup(instance_id, args):
