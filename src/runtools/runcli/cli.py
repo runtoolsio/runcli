@@ -141,10 +141,6 @@ def _init_job_parser(parent, subparser):
                             help='Mapping of output keys to common fields.')
     job_parser.add_argument('-p', '--grok-pattern', type=str, action='append', default=[],
                             help='Grok pattern for extracting fields from output used for task tracking.')
-    job_parser.add_argument('--dry-run', type=_str2_term_status, nargs='?', const=TerminationStatus.COMPLETED,
-                            help='The job will be started without actual execution of its command. The final state '
-                                 'of the job is specified by the value of this option. Default state is COMPLETED. '
-                                 'This option can be used for testing some of the functionality like custom plugins.')
     job_parser.add_argument('-t', '--timeout', type=str,
                             help='The value of this option specifies the signal number or code for stopping the job '
                                  'due to a timeout. A timeout warning is added to the job when it is stopped in this '
@@ -239,4 +235,4 @@ def _check_config_option_conflicts(parser, parsed):
             parser.error("Conflicting options: " + " & ".join(conflict_options))
 
     if getattr(parsed, 'concurrency_group') and not (getattr(parsed, 'serial') or getattr(parsed, 'max_concurrent')):
-        parser.error("--`concurrency-group` must be used with either `--serial` or `--max-concurrent` > 0")
+        parser.error("`--concurrency-group` must be used with either `--serial` or `--max-concurrent` > 0")
