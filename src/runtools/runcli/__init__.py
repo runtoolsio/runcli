@@ -79,7 +79,8 @@ def run_job(args):
         approve_id=approve_id,
         serial=args.serial,
         max_concurrent=args.max_concurrent,
-        concurrency_group=getattr(args, 'concurrency_group')
+        concurrency_group=getattr(args, 'concurrency_group', ),
+        timeout_signal=getattr(args, 'timeout'),
     )
 
 

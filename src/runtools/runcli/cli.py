@@ -142,10 +142,8 @@ def _init_job_parser(parent, subparser):
     job_parser.add_argument('-p', '--grok-pattern', type=str, action='append', default=[],
                             help='Grok pattern for extracting fields from output used for task tracking.')
     job_parser.add_argument('-t', '--timeout', type=str,
-                            help='The value of this option specifies the signal number or code for stopping the job '
-                                 'due to a timeout. A timeout warning is added to the job when it is stopped in this '
-                                 'way.')
-
+                            help='Signal number or code for stopping the job due to timeout.'
+                                 'Example usage: `timeout --signal=SIGUSR1 5 run job --timeout SIGUSR1 sleep 30`')
     job_parser.add_argument('--param', type=lambda p: p.split('='), action='append',
                             help="Parameters are specified in `name=value` format. They represent metadata of the "
                                  "job instance and have no effect on the job execution. They are stored for the each "
