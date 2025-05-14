@@ -5,6 +5,7 @@ from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, ApprovalPhase, ExecutionQueue, ConcurrencyGroup
 from runtools.runjob.phase import SequentialPhase, TimeoutExtension
 from runtools.runjob.program import ProgramPhase
+from runtools.runjob.warning import TimeWarningExtension
 
 
 def run(instance_id, env_config, program_args, *,
@@ -16,9 +17,11 @@ def run(instance_id, env_config, program_args, *,
         max_concurrent=0,
         concurrency_group=None,
         timeout=0.0,
-        timeout_signal=None):
+        timeout_signal=None,
+        time_warning=None,
+        ):
     root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial,
-                               max_concurrent, concurrency_group, timeout)
+                                   max_concurrent, concurrency_group, timeout, time_warning)
     with node.create(env_config) as env_node:
         inst = env_node.create_instance(instance_id, root_phase)
         _set_signal_handlers(inst, timeout_signal)
@@ -26,7 +29,7 @@ def run(instance_id, env_config, program_args, *,
 
 
 def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial, max_concurrent,
-                      concurrency_group, timeout):
+                      concurrency_group, timeout, time_warning):
     if serial and max_concurrent:
         raise ValueError("Either `serial` or `max_concurrent` can be set")
 
@@ -50,6 +53,8 @@ def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group
     root_phase = SequentialPhase('root', phases)
     if timeout:
         root_phase = TimeoutExtension(root_phase, timeout)
+    if time_warning:
+        root_phase = TimeWarningExtension(root_phase, time_warning)
     return root_phase
 
 

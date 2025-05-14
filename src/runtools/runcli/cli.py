@@ -1,11 +1,11 @@
 import argparse
-import re
+import sys
 import textwrap
 
-import sys
 from rich_argparse import RichHelpFormatter
 
 from runtools.runcore.run import TerminationStatus
+from runtools.runcore.util.dt import parse_duration_to_sec
 from . import __version__
 
 ACTION_JOB = 'job'
@@ -123,18 +123,17 @@ def _init_job_parser(parent, subparser):
     job_parser.add_argument('-g', '--concurrency-group', type=str,
                             help='Set concurrency group ID. Default: job ID. '
                                  'Used with --serial or --max-concurrent to limit concurrency across different jobs.')
-    job_parser.add_argument('--warn-time', type=_warn_time_type, action='append', default=[],
-                            help='This enables time warning which is trigger when the execution of the job exceeds '
-                                 'the period specified by the value of this option. The value must be an integer '
-                                 'followed by a single time unit character (one of [smhd]). For example `--warn-time '
-                                 '1h` will trigger time warning when the job is executing over one hour.')
+    job_parser.add_argument('--time-warn', type=_duration_type,
+                            help='Trigger warning when job runs longer than specified time. '
+                             'Format: number[unit] where unit is s(seconds), m(minutes), h(hours), or d(days). '
+                             'No unit = seconds. Examples: 60 (60s), 5m (5 min), 2h (2 hours).')
     job_parser.add_argument('--warn-output', type=str, action='append', default=[],
                             help='This enables output warning which is triggered each time an output line of the job '
                                  'matches regex specified by the value of this option. For example `--warn-output '
                                  '"ERR*"` triggers output warning each time an output line contains a word starting '
                                  'with ERR.')
-    job_parser.add_argument('-d', '--depends-on', type=str, action='append', default=[],
-                            help='The execution will be skipped if specified dependency job is not running.')
+    # job_parser.add_argument('-d', '--depends-on', type=str, action='append', default=[],
+    #                         help='The execution will be skipped if specified dependency job is not running.')
     job_parser.add_argument('-k', '--kv-filter', action='store_true', default=False,
                             help='Key-value output parser is used for task tracking.')
     job_parser.add_argument('--kv-alias', type=str, action='append', default=[],
@@ -180,7 +179,7 @@ def _init_config_parser(subparser):
         help='Manage config file',
         formatter_class=RichHelpFormatter)
 
-    config_subparser = config_parser.add_subparsers(dest='config_action', required=True) # Actions under 'config'
+    config_subparser = config_parser.add_subparsers(dest='config_action', required=True)  # Actions under 'config'
 
     print_config_parser = config_subparser.add_parser(
         ACTION_CONFIG_PRINT,
@@ -199,6 +198,7 @@ def _init_config_parser(subparser):
     create_config_parser.add_argument('-o', '--overwrite', action='store_true', help='Overwrite if config file exists.')
     create_config_parser.add_argument('-p', '--path', type=str, help='Specify path for created config file.')
 
+
 # TODO Consider: change to str (like SortCriteria case) and remove this function
 def _str2_term_status(v):
     try:
@@ -208,12 +208,11 @@ def _str2_term_status(v):
                                          + ", ".join([e.name.lower() for e in TerminationStatus]))
 
 
-def _warn_time_type(arg_value):
-    regex = r'^\d+[smhd]$'
-    pattern = re.compile(regex)
-    if not pattern.match(arg_value):
-        raise argparse.ArgumentTypeError(f"Execution time warning value {arg_value} does not match pattern {regex}")
-    return arg_value
+def _duration_type(arg_value):
+    try:
+        return parse_duration_to_sec(arg_value)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
 
 
 def _check_conditions(parser, parsed):

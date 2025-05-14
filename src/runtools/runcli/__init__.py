@@ -82,6 +82,7 @@ def run_job(args):
         concurrency_group=getattr(args, 'concurrency_group', ),
         timeout=getattr(args, 'timeout', 0.0),
         timeout_signal=getattr(args, 'timeout_sig'),
+        time_warning=getattr(args, 'time_warn'),
     )
 
 
