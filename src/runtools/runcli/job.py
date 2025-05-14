@@ -3,6 +3,7 @@ import signal
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, ApprovalPhase, ExecutionQueue, ConcurrencyGroup
+from runtools.runjob.phase import SequentialPhase, TimeoutExtension
 from runtools.runjob.program import ProgramPhase
 
 
@@ -14,17 +15,18 @@ def run(instance_id, env_config, program_args, *,
         serial=False,
         max_concurrent=0,
         concurrency_group=None,
+        timeout=0.0,
         timeout_signal=None):
-    phases = create_phases(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial,
-                           max_concurrent, concurrency_group)
+    root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial,
+                               max_concurrent, concurrency_group, timeout)
     with node.create(env_config) as env_node:
-        inst = env_node.create_instance(instance_id, phases)
+        inst = env_node.create_instance(instance_id, root_phase)
         _set_signal_handlers(inst, timeout_signal)
         inst.run()
 
 
-def create_phases(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial, max_concurrent,
-                  concurrency_group):
+def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial, max_concurrent,
+                      concurrency_group, timeout):
     if serial and max_concurrent:
         raise ValueError("Either `serial` or `max_concurrent` can be set")
 
@@ -44,7 +46,11 @@ def create_phases(instance_id, program_args, bypass_output, excl, excl_group, ap
                            exec_phase))
     else:
         phases.append(exec_phase)
-    return phases
+
+    root_phase = SequentialPhase('root', phases)
+    if timeout:
+        root_phase = TimeoutExtension(root_phase, timeout)
+    return root_phase
 
 
 class Sig:

@@ -80,7 +80,8 @@ def run_job(args):
         serial=args.serial,
         max_concurrent=args.max_concurrent,
         concurrency_group=getattr(args, 'concurrency_group', ),
-        timeout_signal=getattr(args, 'timeout'),
+        timeout=getattr(args, 'timeout', 0.0),
+        timeout_signal=getattr(args, 'timeout_sig'),
     )
 
 
