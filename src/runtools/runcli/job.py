@@ -1,11 +1,15 @@
+import logging
 import signal
+from re import PatternError
 
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, ApprovalPhase, ExecutionQueue, ConcurrencyGroup
 from runtools.runjob.phase import SequentialPhase, TimeoutExtension
 from runtools.runjob.program import ProgramPhase
-from runtools.runjob.warning import TimeWarningExtension
+from runtools.runjob.warning import TimeWarningExtension, OutputWarningExtension
+
+logger = logging.getLogger(__name__)
 
 
 def run(instance_id, env_config, program_args, *,
@@ -19,9 +23,10 @@ def run(instance_id, env_config, program_args, *,
         timeout=0.0,
         timeout_signal=None,
         time_warning=None,
+        output_warning=(),
         ):
     root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial,
-                                   max_concurrent, concurrency_group, timeout, time_warning)
+                                   max_concurrent, concurrency_group, timeout, time_warning, output_warning)
     with node.create(env_config) as env_node:
         inst = env_node.create_instance(instance_id, root_phase)
         _set_signal_handlers(inst, timeout_signal)
@@ -29,7 +34,7 @@ def run(instance_id, env_config, program_args, *,
 
 
 def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial, max_concurrent,
-                      concurrency_group, timeout, time_warning):
+                      concurrency_group, timeout, time_warning, output_warning):
     if serial and max_concurrent:
         raise ValueError("Either `serial` or `max_concurrent` can be set")
 
@@ -55,6 +60,11 @@ def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group
         root_phase = TimeoutExtension(root_phase, timeout)
     if time_warning:
         root_phase = TimeWarningExtension(root_phase, time_warning)
+    if output_warning:
+        try:
+            root_phase = OutputWarningExtension(root_phase, output_warning)
+        except PatternError as e:
+            logger.warning(f"invalid_output_warning_pattern detail=[{e}] result=[Output warning disabled]")
     return root_phase
 
 

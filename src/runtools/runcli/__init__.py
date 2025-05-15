@@ -83,6 +83,7 @@ def run_job(args):
         timeout=getattr(args, 'timeout', 0.0),
         timeout_signal=getattr(args, 'timeout_sig'),
         time_warning=getattr(args, 'time_warn'),
+        output_warning=args.output_warn,
     )
 
 

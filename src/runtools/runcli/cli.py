@@ -1,7 +1,7 @@
 import argparse
-import sys
 import textwrap
 
+import sys
 from rich_argparse import RichHelpFormatter
 
 from runtools.runcore.run import TerminationStatus
@@ -123,11 +123,11 @@ def _init_job_parser(parent, subparser):
     job_parser.add_argument('-g', '--concurrency-group', type=str,
                             help='Set concurrency group ID. Default: job ID. '
                                  'Used with --serial or --max-concurrent to limit concurrency across different jobs.')
-    job_parser.add_argument('--time-warn', type=_duration_type,
+    job_parser.add_argument('--time-warn', type=_duration_type, metavar='DURATION',
                             help='Trigger warning when job runs longer than specified time. '
                              'Format: number[unit] where unit is s(seconds), m(minutes), h(hours), or d(days). '
                              'No unit = seconds. Examples: 60 (60s), 5m (5 min), 2h (2 hours).')
-    job_parser.add_argument('--warn-output', type=str, action='append', default=[],
+    job_parser.add_argument('--output-warn', type=str, metavar='REGEX', action='append', default=[],
                             help='This enables output warning which is triggered each time an output line of the job '
                                  'matches regex specified by the value of this option. For example `--warn-output '
                                  '"ERR*"` triggers output warning each time an output line contains a word starting '
