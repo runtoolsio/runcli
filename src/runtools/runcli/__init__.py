@@ -110,8 +110,10 @@ def load_config_and_log_setup(instance_id, args):
     if cfg_found:
         logger.info(f"configuration_loaded instance=[{instance_id}] source=[{cfg_path}]")
     else:
-        logger.warning(f"fallback_configuration_loaded instance=[{instance_id}] fallback_source=[{cfg_path}] "
-                       f"reason=[Config file not found in search paths]")
+        logger.warning(f"fallback_configuration_loaded instance=[{instance_id}] fallback_config=[{cfg_path}]")
+        console.print(Text().append("Note: ", style="bold yellow")
+                      .append(f"No config file found in search paths. Using built-in defaults. ")
+                      .append("Run `config create` or use `-D/--def-config` to suppress this message."))
 
     return config
 
