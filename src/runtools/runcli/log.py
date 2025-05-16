@@ -26,6 +26,7 @@ import sys
 import time
 
 from runtools.runcore import paths
+from runtools.runcore.err import RuntoolsException
 from runtools.runcore.paths import expand_user
 
 LOG_FILENAME = 'runcli.log'
@@ -177,3 +178,7 @@ def timing(operation, *, args_idx=()):
         return wrapper
 
     return decorator
+
+
+class InvalidLogLevelError(RuntoolsException):
+    pass
