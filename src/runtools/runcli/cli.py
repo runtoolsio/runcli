@@ -37,11 +37,12 @@ def parse_args(args):
     _init_clean_parser(parent, subparser)
 
     parsed = parser.parse_args(args)
-    if not getattr(parsed, 'action', None):
+    if not getattr(parsed, 'action'):
         parser.print_help()
         sys.exit(1)
 
-    _check_conditions(parser, parsed)
+    if parsed.action == ACTION_JOB:
+        _check_conditions(parser, parsed)
     return parsed
 
 

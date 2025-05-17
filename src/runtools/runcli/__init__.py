@@ -141,6 +141,6 @@ def get_env_config(args, config, instance_id) -> EnvironmentConfigUnion:
         env_config, env_config_path = env.load_env_default_config(env_id)
         logger.info(
             f"environment_default_config_loaded instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}] "
-            f"reason=[No config for `{env_id}` env found]")
+            f"reason=[No config for `{env_id}` environment found]")
 
     return env.env_config_from_dict(env_config)
