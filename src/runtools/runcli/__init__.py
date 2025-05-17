@@ -37,7 +37,6 @@ def main(args):
     try:
         run_app(args)
     except RuntoolsException as e:
-        # TODO print to stderr
         console.print(Text().append("User error: ", style="bold red").append(str(e)))
         exit(1)
     except KeyboardInterrupt:
