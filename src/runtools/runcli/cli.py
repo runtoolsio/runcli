@@ -144,7 +144,7 @@ def _init_job_parser(parent, subparser):
 
     # Coordination group
     coord_group = job_parser.add_argument_group("Coordination")
-    coord_group.add_argument('-A', '--approve', metavar='PHASE_ID',
+    coord_group.add_argument('-a', '--approve', metavar='PHASE_ID',
                              help='Adds approval phase with specified ID. Job waits in pending state until explicitly '
                                   'approved via API or CLI. ID is used to reference the approval for release commands.')
     # Future options like --depends-on, --wait-for, etc. would go here
