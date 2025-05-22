@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.text import Text
 
 from runtools.runcore import util, env
-from runtools.runcore.env import DEFAULT_LOCAL_ENVIRONMENT, EnvironmentNotFoundError, EnvironmentConfigUnion
+from runtools.runcore.env import EnvironmentConfigUnion
 from runtools.runcore.err import RuntoolsException
 from runtools.runcore.job import InstanceID
 from runtools.runcore.paths import ConfigFileNotFoundError
@@ -37,8 +37,12 @@ def main(args):
     try:
         run_app(args)
     except RuntoolsException as e:
+        logger.error(f"run_job_command_failed reason=[{e}]")
         console.print(Text().append("User error: ", style="bold red").append(str(e)))
         exit(1)
+    except Exception:
+        logger.exception("run_job_command_error")
+        raise
     except KeyboardInterrupt:
         exit(130)
 
@@ -66,7 +70,7 @@ def run_job(args):
     job_id = args.id or " ".join([args.command.removeprefix('./')] + args.arg)
     instance_id = InstanceID(job_id, getattr(args, 'run_id'))
     config = load_config_and_log_setup(instance_id, args)
-    env_config = get_env_config(args, config, instance_id)
+    env_config = resolve_env_config(args, instance_id)
     program_args = [args.command] + args.arg
     approve_id = getattr(args, 'approve')
 
@@ -127,20 +131,12 @@ def configure_logging(config):
     )
 
 
-def get_env_config(args, config, instance_id) -> EnvironmentConfigUnion:
-    def_env_id = config.get('environments', {'default': DEFAULT_LOCAL_ENVIRONMENT}).get('default',
-                                                                                        DEFAULT_LOCAL_ENVIRONMENT)
-    env_id = getattr(args, 'env') or def_env_id
-    try:
-        env_config, env_config_path = env.load_env_config(env_id)
-        logger.info(f"environment_config_loaded instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}]")
-    except (ConfigFileNotFoundError, EnvironmentNotFoundError) as e:
-        if getattr(args, 'config_required', False) or env_id != DEFAULT_LOCAL_ENVIRONMENT:
-            logger.error(f"environment_config_not_found instance=[{instance_id}] env=[{env_id}]")
-            raise e
-        env_config, env_config_path = env.load_env_default_config(env_id)
-        logger.info(
-            f"environment_default_config_loaded instance=[{instance_id}] env=[{env_id}] path=[{env_config_path}] "
-            f"reason=[No config for `{env_id}` environment found]")
+def resolve_env_config(args, instance_id) -> EnvironmentConfigUnion:
+    if eid := getattr(args, 'env'):
+        env_config = env.get_env_config(eid)
+        logger.info(f"environment_config_loaded instance=[{instance_id}] env=[{env_config.id}]")
+    else:
+        env_config = env.get_default_env_config()
+        logger.info(f"default_environment_config_loaded instance=[{instance_id}] env=[{env_config.id}]")
 
-    return env.env_config_from_dict(env_config)
+    return env_config

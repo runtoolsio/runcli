@@ -8,6 +8,3 @@ level = "warn"
 [log.file]
 level = "info"
 # path = "~/.cache/runtools/runcli.log"
-
-[environments]
-default = "local"
