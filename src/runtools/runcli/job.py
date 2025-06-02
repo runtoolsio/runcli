@@ -43,7 +43,7 @@ def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group
     if approve_id:
         phases.append(ApprovalPhase(phase_id=approve_id, phase_name='Run Manual Approval'))
 
-    program_phase = ProgramPhase('PROGRAM', *program_args, read_output=not bypass_output)
+    program_phase = ProgramPhase('EXEC', *program_args, read_output=not bypass_output)
     if excl or excl_group:
         exec_phase = MutualExclusionPhase('MUTEX_GUARD', program_phase, exclusion_group=excl_group)
     else:
