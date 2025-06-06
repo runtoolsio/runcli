@@ -5,7 +5,7 @@ from re import PatternError
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, ApprovalPhase, ExecutionQueue, ConcurrencyGroup
-from runtools.runjob.phase import SequentialPhase, TimeoutExtension
+from runtools.runjob.phase import TimeoutExtension
 from runtools.runjob.program import ProgramPhase
 from runtools.runjob.warning import TimeWarningExtension, OutputWarningExtension
 
@@ -28,7 +28,7 @@ def run(instance_id, env_config, program_args, *,
     root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial,
                                    max_concurrent, concurrency_group, timeout, time_warning, output_warning)
     with node.create(env_config) as env_node:
-        inst = env_node.create_instance(instance_id, root_phase)
+        inst = env_node.create_instance(instance_id, [root_phase])
         _set_signal_handlers(inst, timeout_signal)
         inst.run()
 
@@ -48,17 +48,17 @@ def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group
     if approve_id:
         phase = ApprovalPhase(phase_id=approve_id, phase_name='Run Manual Approval', children=(phase,))
 
-    root_phase = SequentialPhase('root', [phase])
     if timeout:
-        root_phase = TimeoutExtension(root_phase, timeout)
+        phase = TimeoutExtension(phase, timeout)
     if time_warning:
-        root_phase = TimeWarningExtension(root_phase, time_warning)
+        phase = TimeWarningExtension(phase, time_warning)
     if output_warning:
         try:
-            root_phase = OutputWarningExtension(root_phase, output_warning)
+            phase = OutputWarningExtension(phase, output_warning)
         except PatternError as e:
             logger.warning(f"invalid_output_warning_pattern detail=[{e}] result=[Output warning disabled]")
-    return root_phase
+
+    return phase
 
 
 class Sig:
