@@ -38,24 +38,17 @@ def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group
     if serial and max_concurrent:
         raise ValueError("Either `serial` or `max_concurrent` can be set")
 
-    phases = []
+    phase = ProgramPhase('EXEC', *program_args, read_output=not bypass_output)
+    if excl or excl_group:
+        phase = MutualExclusionPhase('MUTEX_GUARD', phase, exclusion_group=excl_group)
+    if serial or max_concurrent:
+        phase = ExecutionQueue(
+            'QUEUE', ConcurrencyGroup(concurrency_group or instance_id.job_id, max_concurrent or 1), phase)
 
     if approve_id:
-        phases.append(ApprovalPhase(phase_id=approve_id, phase_name='Run Manual Approval'))
+        phase = ApprovalPhase(phase_id=approve_id, phase_name='Run Manual Approval', children=(phase,))
 
-    program_phase = ProgramPhase('EXEC', *program_args, read_output=not bypass_output)
-    if excl or excl_group:
-        exec_phase = MutualExclusionPhase('MUTEX_GUARD', program_phase, exclusion_group=excl_group)
-    else:
-        exec_phase = program_phase
-    if serial or max_concurrent:
-        phases.append(
-            ExecutionQueue('QUEUE', ConcurrencyGroup(concurrency_group or instance_id.job_id, max_concurrent or 1),
-                           exec_phase))
-    else:
-        phases.append(exec_phase)
-
-    root_phase = SequentialPhase('root', phases)
+    root_phase = SequentialPhase('root', [phase])
     if timeout:
         root_phase = TimeoutExtension(root_phase, timeout)
     if time_warning:
