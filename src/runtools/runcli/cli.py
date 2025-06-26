@@ -117,6 +117,9 @@ def _init_job_parser(parent, subparser):
                               help='Disable output capturing. Program output goes directly to stdout/stderr. '
                                    'Improves compatibility with interactive programs using terminal control codes. '
                                    'Note: Disables output-based features like parsing and tracking.')
+    output_group.add_argument('-l', '--log-output', action='store_true',
+                              help='Save job output to log file. Default location (unless configured otherwise): '
+                                   '~/.local/state/runtools/{env}/output/{job_id}/{run_id}.log')
     output_group.add_argument('--output-warn', type=str, metavar='REGEX', action='append', default=[],
                               help='This enables output warning which is triggered each time an output line of the job '
                                    'matches regex specified by the value of this option. For example `--warn-output '
@@ -236,6 +239,14 @@ def _check_conditions(parser, parsed):
     _check_config_option_conflicts(parser, parsed)
 
 
+def _check_mutual_exclusion(parser, parsed, *option_names):
+    """Check that at most one of the given options is present."""
+    present = [opt for opt in option_names if getattr(parsed, opt.replace('-', '_'), None)]
+    if len(present) > 1:
+        cli_options = ['--' + opt.replace('_', '-') for opt in present]
+        parser.error(f"Conflicting options: {' & '.join(cli_options)}")
+
+
 def _check_config_option_conflicts(parser, parsed):
     """Check that invalid combinations of options were not used.
 
@@ -243,12 +254,10 @@ def _check_config_option_conflicts(parser, parsed):
         parser: The argument parser instance.
         parsed: The parsed arguments object.
     """
-    config_options = [opt for opt in ['def_config', 'config_required', 'config'] if getattr(parsed, opt)]
-    concurrency_options = [opt for opt in ['serial', 'max_concurrent'] if getattr(parsed, opt)]
+    _check_mutual_exclusion(parser, parsed, 'def_config', 'config_required', 'config')
+    _check_mutual_exclusion(parser, parsed, 'bypass_output', 'log_output')
+    _check_mutual_exclusion(parser, parsed, 'serial', 'max_concurrent')
 
-    for conflict_options in config_options, concurrency_options:
-        if len(conflict_options) > 1:
-            parser.error("Conflicting options: " + " & ".join(conflict_options))
-
+    # Check dependent options
     if getattr(parsed, 'concurrency_group') and not (getattr(parsed, 'serial') or getattr(parsed, 'max_concurrent')):
-        parser.error("`--concurrency-group` must be used with either `--serial` or `--max-concurrent` > 0")
+        parser.error("`--concurrency-group` must be used with either `--serial` or `--max-concurrent`")
