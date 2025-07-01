@@ -1,10 +1,13 @@
 import logging
 import signal
 from re import PatternError
+from typing import Optional
 
+from runtools.runcore import paths
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, ApprovalPhase, ExecutionQueue, ConcurrencyGroup
+from runtools.runjob.output import FileOutputStorage, OutputRouter, InMemoryTailBuffer
 from runtools.runjob.phase import TimeoutExtension
 from runtools.runjob.program import ProgramPhase
 from runtools.runjob.warning import TimeWarningExtension, OutputWarningExtension
@@ -14,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 def run(instance_id, env_config, program_args, *,
         bypass_output=False,
+        log_output=False,
+        log_path=None,
+        run_log=None,
         excl=False,
         excl_group=None,
         approve_id=None,
@@ -27,8 +33,9 @@ def run(instance_id, env_config, program_args, *,
         ):
     root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial,
                                    max_concurrent, concurrency_group, timeout, time_warning, output_warning)
+    output_router = create_output_router(env_config.id, instance_id, log_output or log_path, log_path, run_log)
     with node.create(env_config) as env_node:
-        inst = env_node.create_instance(instance_id, [root_phase])
+        inst = env_node.create_instance(instance_id, [root_phase], output_router=output_router)
         _set_signal_handlers(inst, timeout_signal)
         inst.run()
 
@@ -59,6 +66,17 @@ def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group
             logger.warning(f"invalid_output_warning_pattern detail=[{e}] result=[Output warning disabled]")
 
     return phase
+
+
+def create_output_router(env_id: str, instance_id, log_output: bool, log_path: Optional[str], run_log: Optional[str]):
+    storages = []
+
+    if log_output:
+        log_path = log_path or paths.job_log_dir(env_id, instance_id.job_id, create=True) / f"{instance_id.run_id}.log"
+        log_storage = FileOutputStorage(log_path)
+        storages.append(log_storage)
+
+    return OutputRouter(tail_buffer=InMemoryTailBuffer(50), storages=storages)
 
 
 class Sig:

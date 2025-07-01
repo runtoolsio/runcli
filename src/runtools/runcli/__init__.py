@@ -77,6 +77,9 @@ def run_job(args):
     job.run(
         instance_id, env_config, program_args,
         bypass_output=args.bypass_output,
+        log_output=args.log_output,
+        log_path=getattr(args, 'log_path'),
+        run_log=getattr(args, 'run_log'),
         excl=args.excl_run,
         excl_group=getattr(args, 'excl_group'),
         approve_id=approve_id,

@@ -120,6 +120,11 @@ def _init_job_parser(parent, subparser):
     output_group.add_argument('-l', '--log-output', action='store_true',
                               help='Save job output to log file. Default location (unless configured otherwise): '
                                    '~/.local/state/runtools/{env}/output/{job_id}/{run_id}.log')
+    output_group.add_argument('--log-path', type=str, metavar='PATH',
+                              help='Custom path for job output log file. Implies --log-output.')
+    output_group.add_argument('--run-log', type=str, metavar='PATH',
+                              help='Path where job writes its own log file for this run. Tracking this '
+                                   'location enables reading output through commands like `run output`.')
     output_group.add_argument('--output-warn', type=str, metavar='REGEX', action='append', default=[],
                               help='This enables output warning which is triggered each time an output line of the job '
                                    'matches regex specified by the value of this option. For example `--warn-output '
