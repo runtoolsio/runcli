@@ -12,6 +12,8 @@ from runtools.runcore.err import RuntoolsException
 from runtools.runcore.job import InstanceID
 from runtools.runcore.paths import ConfigFileNotFoundError
 from runtools.runcore.util import update_nested_dict
+from runtools.runcore.util.parser import KVParser
+from runtools.runjob.output import OutputSink, ParsingPreprocessor
 from . import __version__, cmd, cli, log, job
 from .cfg import CONFIG_FILE
 from .cli import ACTION_CONFIG
@@ -74,6 +76,9 @@ def run_job(args):
     program_args = [args.command] + args.arg
     approve_id = getattr(args, 'approve')
 
+    # Build output sink from CLI args (with parsing if requested)
+    output_sink = _build_output_sink(args)
+
     job.run(
         instance_id, env_config, program_args,
         bypass_output=args.bypass_output,
@@ -90,7 +95,30 @@ def run_job(args):
         timeout_signal=getattr(args, 'timeout_sig'),
         time_warning=getattr(args, 'time_warn'),
         output_warning=args.output_warn,
+        output_sink=output_sink,
     )
+
+
+def _build_output_sink(args):
+    """Build output sink from CLI arguments, with parsing preprocessor if requested."""
+    parsers = []
+
+    if getattr(args, 'kv_filter', False):
+        # Parse aliases from CLI: "count=completed" -> {'count': 'completed'}
+        aliases = {}
+        for alias_str in getattr(args, 'kv_alias', []):
+            if '=' in alias_str:
+                from_key, to_key = alias_str.split('=', 1)
+                aliases[from_key.strip()] = to_key.strip()
+        parsers.append(KVParser(aliases=aliases if aliases else None))
+
+    # TODO: Add grok pattern support when implemented
+    # for pattern in getattr(args, 'grok_pattern', []):
+    #     parsers.append(GrokParser(pattern))
+
+    if parsers:
+        return OutputSink(ParsingPreprocessor(parsers))
+    return None
 
 
 def load_config_and_log_setup(instance_id, args):
