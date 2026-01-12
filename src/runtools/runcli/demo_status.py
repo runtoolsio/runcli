@@ -9,7 +9,12 @@ import time
 
 
 def main():
+    # Initial events before download
     print("event=[init]", flush=True)
+    time.sleep(0.3)
+    print("event=[connecting]", flush=True)
+    time.sleep(0.3)
+    print("event=[authenticated]", flush=True)
     time.sleep(0.3)
 
     # Simulate download with progress
