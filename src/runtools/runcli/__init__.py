@@ -74,7 +74,7 @@ def run_job(args):
     config = load_config_and_log_setup(instance_id, args)
     env_config = resolve_env_config(args, instance_id)
     program_args = [args.command] + args.arg
-    approve_id = getattr(args, 'approve')
+    checkpoint_id = getattr(args, 'checkpoint')
 
     # Build output sink from CLI args (with parsing if requested)
     output_sink = _build_output_sink(args)
@@ -87,7 +87,7 @@ def run_job(args):
         run_log=getattr(args, 'run_log'),
         excl=args.excl_run,
         excl_group=getattr(args, 'excl_group'),
-        approve_id=approve_id,
+        checkpoint_id=checkpoint_id,
         serial=args.serial,
         max_concurrent=args.max_concurrent,
         concurrency_group=getattr(args, 'concurrency_group', ),

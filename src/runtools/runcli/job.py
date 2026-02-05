@@ -6,9 +6,9 @@ from typing import Optional
 from runtools.runcore import paths
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
-from runtools.runjob.coord import MutualExclusionPhase, ApprovalPhase, ExecutionQueue, ConcurrencyGroup
+from runtools.runjob.coord import MutualExclusionPhase, CheckpointPhase, ExecutionQueue, ConcurrencyGroup
 from runtools.runjob.output import FileOutputStorage, OutputRouter, InMemoryTailBuffer
-from runtools.runjob.phase import TimeoutExtension
+from runtools.runjob.phase import TimeoutExtension, SequentialPhase
 from runtools.runjob.program import ProgramPhase
 from runtools.runjob.warning import TimeWarningExtension, OutputWarningExtension
 
@@ -22,7 +22,7 @@ def run(instance_id, env_config, program_args, *,
         run_log=None,
         excl=False,
         excl_group=None,
-        approve_id=None,
+        checkpoint_id=None,
         serial=False,
         max_concurrent=0,
         concurrency_group=None,
@@ -32,7 +32,7 @@ def run(instance_id, env_config, program_args, *,
         output_warning=(),
         output_sink=None,
         ):
-    root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial,
+    root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial,
                                    max_concurrent, concurrency_group, timeout, time_warning, output_warning)
     output_router = create_output_router(env_config.id, instance_id, log_output or log_path, log_path, run_log)
     with node.create(env_config) as env_node:
@@ -42,7 +42,7 @@ def run(instance_id, env_config, program_args, *,
         inst.run()
 
 
-def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, approve_id, serial, max_concurrent,
+def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial, max_concurrent,
                       concurrency_group, timeout, time_warning, output_warning):
     if serial and max_concurrent:
         raise ValueError("Either `serial` or `max_concurrent` can be set")
@@ -54,8 +54,9 @@ def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group
         phase = ExecutionQueue(
             'QUEUE', ConcurrencyGroup(concurrency_group or instance_id.job_id, max_concurrent or 1), phase)
 
-    if approve_id:
-        phase = ApprovalPhase(phase_id=approve_id, phase_name='Run Manual Approval', children=(phase,))
+    if checkpoint_id:
+        checkpoint = CheckpointPhase(checkpoint_id, phase_name='Manual Checkpoint')
+        phase = SequentialPhase(f'{checkpoint_id}_seq', [checkpoint, phase])
 
     if timeout:
         phase = TimeoutExtension(phase, timeout)
