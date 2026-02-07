@@ -36,7 +36,7 @@ def run(instance_id, env_config, program_args, *,
                                    max_concurrent, concurrency_group, timeout, time_warning, output_warning)
     output_router = create_output_router(env_config.id, instance_id, log_output or log_path, log_path, run_log)
     with node.create(env_config) as env_node:
-        inst = env_node.create_instance(instance_id, [root_phase],
+        inst = env_node.create_instance(instance_id, root_phase,
                                         output_sink=output_sink, output_router=output_router)
         _set_signal_handlers(inst, timeout_signal)
         inst.run()
