@@ -15,6 +15,7 @@ ACTION_CLEAN = 'clean'
 ACTION_CONFIG = 'config'
 ACTION_CONFIG_PRINT = 'print'
 ACTION_CONFIG_CREATE = 'create'
+ACTION_ENV = 'env'
 
 
 def parse_args(args):
@@ -33,6 +34,7 @@ def parse_args(args):
     subparser = parser.add_subparsers(dest='action')  # command/action
 
     _init_config_parser(subparser)
+    _init_env_parser(subparser)
     _init_job_parser(parent, subparser)
     _init_clean_parser(parent, subparser)
 
@@ -67,6 +69,17 @@ def init_cfg_parent_parser():
     cfg_group.add_argument('--set', type=str, action='append',
                            help='Override value of config attribute. Format: attribute=value. Example: log.stdout.level=info')
     return parser
+
+def _init_env_parser(subparser):
+    """Creates parser for `env` command to display environment configuration."""
+    env_parser = subparser.add_parser(
+        ACTION_ENV,
+        description='Show resolved environment configuration',
+        help='Show resolved environment configuration',
+        formatter_class=RichHelpFormatter)
+    env_parser.add_argument('-e', '--env', type=str, help='Environment ID to show. Uses default if not specified.')
+    env_parser.add_argument('-a', '--all', action='store_true', dest='all_envs', help='Show all environments.')
+
 
 def _init_job_parser(parent, subparser):
     """

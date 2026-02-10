@@ -8,6 +8,7 @@ from rich.text import Text
 
 from runtools.runcore import util, env
 from runtools.runcore.env import EnvironmentConfigUnion
+from runtools.runcore.util.files import format_toml
 from runtools.runcore.err import RuntoolsException
 from runtools.runcore.job import InstanceID
 from runtools.runcore.paths import ConfigFileNotFoundError
@@ -16,7 +17,7 @@ from runtools.runcore.util.parser import KVParser
 from runtools.runjob.output import OutputSink, ParsingPreprocessor
 from . import __version__, cmd, cli, log, job
 from .cfg import CONFIG_FILE
-from .cli import ACTION_CONFIG
+from .cli import ACTION_CONFIG, ACTION_ENV
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,8 @@ def run_app(args):
 
     if args_parsed.action == ACTION_CONFIG:
         run_config(args_parsed)
+    elif args_parsed.action == ACTION_ENV:
+        run_env(args_parsed)
     else:
         run_job(args_parsed)
 
@@ -66,6 +69,19 @@ def run_config(args):
             cfg.print_found_config_file()
     elif args.config_action == cli.ACTION_CONFIG_CREATE:
         print("Created " + str(cfg.create_config_file(getattr(args, 'path'), overwrite=args.overwrite)))
+
+
+def run_env(args):
+    all_envs = getattr(args, 'all_envs', False)
+    env_configs = env.get_env_configs().values() if all_envs else [env.get_env_config(getattr(args, 'env'))]
+    for i, env_config in enumerate(env_configs):
+        if all_envs:
+            if i > 0:
+                print()
+            print(f"# Environment: {env_config.id}")
+        print(format_toml(env_config.model_dump(mode='json')))
+        if all_envs:
+            print(f"{'─' * 30}")
 
 
 def run_job(args):
