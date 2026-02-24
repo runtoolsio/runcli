@@ -7,6 +7,7 @@ from rich_argparse.contrib import ParagraphRichHelpFormatter
 
 from runtools.runcore.run import TerminationStatus
 from runtools.runcore.util.dt import parse_duration_to_sec
+from runtools.runcore.util.text import parse_size_to_bytes
 from . import __version__
 
 ACTION_JOB = 'job'
@@ -143,6 +144,10 @@ def _init_job_parser(parent, subparser):
                                    'matches regex specified by the value of this option. For example `--warn-output '
                                    '"ERR*"` triggers output warning each time an output line contains a word starting '
                                    'with ERR.')
+    output_group.add_argument('--tail-buffer-size', type=_size_type, metavar='SIZE', default=2 * 1024 * 1024,
+                              help='Size of the in-memory tail buffer for recent output. '
+                                   'Accepts bytes (e.g. 1048576) or human-readable units (e.g. 512KB, 2MB, 1GB). '
+                                   'Default: 2MB.')
 
     # Status Tracking group
     status_group = job_parser.add_argument_group("Status Tracking")
@@ -249,6 +254,13 @@ def _str2_term_status(v):
 def _duration_type(arg_value):
     try:
         return parse_duration_to_sec(arg_value)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+
+def _size_type(arg_value):
+    try:
+        return parse_size_to_bytes(arg_value)
     except ValueError as e:
         raise argparse.ArgumentTypeError(str(e))
 

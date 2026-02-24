@@ -112,6 +112,7 @@ def run_job(args):
         time_warning=getattr(args, 'time_warn'),
         output_warning=args.output_warn,
         output_sink=output_sink,
+        tail_buffer_size=args.tail_buffer_size,
     )
 
 
