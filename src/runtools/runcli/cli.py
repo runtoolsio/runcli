@@ -131,14 +131,10 @@ def _init_job_parser(parent, subparser):
                               help='Disable output capturing. Program output goes directly to stdout/stderr. '
                                    'Improves compatibility with interactive programs using terminal control codes. '
                                    'Note: Disables output-based features like parsing and tracking.')
-    output_group.add_argument('-l', '--log-output', action='store_true',
-                              help='Save job output to log file. Default location (unless configured otherwise): '
-                                   '~/.local/state/runtools/{env}/output/{job_id}/{run_id}.log')
-    output_group.add_argument('--log-path', type=str, metavar='PATH',
-                              help='Custom path for job output log file. Implies --log-output.')
-    output_group.add_argument('--run-log', type=str, metavar='PATH',
-                              help='Path where job writes its own log file for this run. Tracking this '
-                                   'location enables reading output through commands like `run output`.')
+    output_group.add_argument('--no-output-file', action='store_true',
+                              help='Disable output file storage for this run.')
+    output_group.add_argument('--output-path', type=str, metavar='PATH',
+                              help='Custom path for job output file. Overrides env config location.')
     output_group.add_argument('--output-warn', type=str, metavar='REGEX', action='append', default=[],
                               help='This enables output warning which is triggered each time an output line of the job '
                                    'matches regex specified by the value of this option. For example `--warn-output '
@@ -285,7 +281,8 @@ def _check_config_option_conflicts(parser, parsed):
         parsed: The parsed arguments object.
     """
     _check_mutual_exclusion(parser, parsed, 'def_config', 'config_required', 'config')
-    _check_mutual_exclusion(parser, parsed, 'bypass_output', 'log_output')
+    _check_mutual_exclusion(parser, parsed, 'bypass_output', 'output_path')
+    _check_mutual_exclusion(parser, parsed, 'no_output_file', 'output_path')
     _check_mutual_exclusion(parser, parsed, 'serial', 'max_concurrent')
 
     # Check dependent options

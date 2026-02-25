@@ -1,9 +1,11 @@
 import logging
+import os
 import signal
+from pathlib import Path
 from re import PatternError
-from typing import Optional
 
 from runtools.runcore import paths
+from runtools.runcore.env import FileOutputStorageConfig
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, CheckpointPhase, ExecutionQueue, ConcurrencyGroup
@@ -17,9 +19,8 @@ logger = logging.getLogger(__name__)
 
 def run(instance_id, env_config, program_args, *,
         bypass_output=False,
-        log_output=False,
-        log_path=None,
-        run_log=None,
+        no_output_file=False,
+        output_path=None,
         excl=False,
         excl_group=None,
         checkpoint_id=None,
@@ -35,8 +36,12 @@ def run(instance_id, env_config, program_args, *,
         ):
     root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial,
                                    max_concurrent, concurrency_group, timeout, time_warning, output_warning)
-    output_router = create_output_router(env_config.id, instance_id, log_output or log_path, log_path, run_log,
-                                         tail_buffer_size)
+    output_router = create_output_router(
+        env_config.id, instance_id,
+        no_output_file=no_output_file, output_path=output_path,
+        output_storage_configs=getattr(env_config, 'output_storage', ()),
+        tail_buffer_size=tail_buffer_size,
+    )
     with node.create(env_config) as env_node:
         inst = env_node.create_instance(instance_id, root_phase,
                                         output_sink=output_sink, output_router=output_router)
@@ -73,14 +78,24 @@ def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group
     return phase
 
 
-def create_output_router(env_id: str, instance_id, log_output: bool, log_path: Optional[str], run_log: Optional[str],
+def create_output_router(env_id: str, instance_id, *,
+                         no_output_file=False, output_path=None,
+                         output_storage_configs=(),
                          tail_buffer_size: int = 2 * 1024 * 1024):
     storages = []
 
-    if log_output:
-        log_path = log_path or paths.job_log_dir(env_id, instance_id.job_id, create=True) / f"{instance_id.run_id}.log"
-        log_storage = FileOutputStorage(log_path)
-        storages.append(log_storage)
+    if output_path:
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        storages.append(FileOutputStorage(output_path))
+    elif not no_output_file:
+        for cfg in output_storage_configs:
+            if not cfg.enabled:
+                continue
+            if isinstance(cfg, FileOutputStorageConfig):
+                base = Path(cfg.dir).expanduser() if cfg.dir else paths.output_dir(env_id, create=True)
+                path = base / instance_id.job_id / f"{instance_id.run_id}.jsonl"
+                os.makedirs(path.parent, exist_ok=True)
+                storages.append(FileOutputStorage(path))
 
     return OutputRouter(tail_buffer=InMemoryTailBuffer(max_bytes=tail_buffer_size), storages=storages)
 
