@@ -12,7 +12,6 @@ from . import __version__
 
 ACTION_JOB = 'job'
 ACTION_SERVICE = 'service'
-ACTION_CLEAN = 'clean'
 ACTION_CONFIG = 'config'
 ACTION_CONFIG_PRINT = 'print'
 ACTION_CONFIG_CREATE = 'create'
@@ -37,7 +36,6 @@ def parse_args(args):
     _init_config_parser(subparser)
     _init_env_parser(subparser)
     _init_job_parser(parent, subparser)
-    _init_clean_parser(parent, subparser)
 
     parsed = parser.parse_args(args)
     if not getattr(parsed, 'action'):
@@ -194,17 +192,6 @@ def _init_job_parser(parent, subparser):
     job_parser.add_argument('command', type=str, metavar='COMMAND', help='Program to execute')
     job_parser.add_argument('arg', type=str, metavar='ARG', nargs=argparse.REMAINDER, help="Program arguments")
 
-
-def _init_clean_parser(common, subparsers):
-    """
-    Creates parsers for `clean` command
-
-    :param common: parent parser
-    :param subparsers: sub-parser for clean parser to be added to
-    """
-
-    clean_parser = subparsers.add_parser(ACTION_CLEAN, parents=[common], description='Performs cleanups',
-                                         add_help=False)
 
 
 def _init_config_parser(subparser):
