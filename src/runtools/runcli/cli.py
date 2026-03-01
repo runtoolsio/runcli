@@ -129,19 +129,17 @@ def _init_job_parser(parent, subparser):
                               help='Disable output capturing. Program output goes directly to stdout/stderr. '
                                    'Improves compatibility with interactive programs using terminal control codes. '
                                    'Note: Disables output-based features like parsing and tracking.')
-    output_group.add_argument('--no-output-file', action='store_true',
-                              help='Disable output file storage for this run.')
-    output_group.add_argument('--output-path', type=str, metavar='PATH',
-                              help='Custom path for job output file. Overrides env config location.')
+    output_group.add_argument('--no-output-storage', action='store_true',
+                              help='Disable all output storage for this run.')
     output_group.add_argument('--output-warn', type=str, metavar='REGEX', action='append', default=[],
                               help='This enables output warning which is triggered each time an output line of the job '
                                    'matches regex specified by the value of this option. For example `--warn-output '
                                    '"ERR*"` triggers output warning each time an output line contains a word starting '
                                    'with ERR.')
-    output_group.add_argument('--tail-buffer-size', type=_size_type, metavar='SIZE', default=2 * 1024 * 1024,
+    output_group.add_argument('--tail-buffer-size', type=_size_type, metavar='SIZE', default=None,
                               help='Size of the in-memory tail buffer for recent output. '
                                    'Accepts bytes (e.g. 1048576) or human-readable units (e.g. 512KB, 2MB, 1GB). '
-                                   'Default: 2MB.')
+                                   'Default: from env config (2MB).')
 
     # Status Tracking group
     status_group = job_parser.add_argument_group("Status Tracking")
@@ -268,8 +266,6 @@ def _check_config_option_conflicts(parser, parsed):
         parsed: The parsed arguments object.
     """
     _check_mutual_exclusion(parser, parsed, 'def_config', 'config_required', 'config')
-    _check_mutual_exclusion(parser, parsed, 'bypass_output', 'output_path')
-    _check_mutual_exclusion(parser, parsed, 'no_output_file', 'output_path')
     _check_mutual_exclusion(parser, parsed, 'serial', 'max_concurrent')
 
     # Check dependent options

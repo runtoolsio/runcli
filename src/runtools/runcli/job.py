@@ -5,7 +5,6 @@ from re import PatternError
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, CheckpointPhase, ExecutionQueue, ConcurrencyGroup
-from runtools.runjob.output import FileOutputStorage, OutputRouter, InMemoryTailBuffer
 from runtools.runjob.phase import TimeoutExtension, SequentialPhase
 from runtools.runjob.program import ProgramPhase
 from runtools.runjob.warning import TimeWarningExtension, OutputWarningExtension
@@ -15,8 +14,7 @@ logger = logging.getLogger(__name__)
 
 def run(instance_id, env_config, program_args, *,
         bypass_output=False,
-        no_output_file=False,
-        output_path=None,
+        no_output_storage=False,
         excl=False,
         excl_group=None,
         checkpoint_id=None,
@@ -28,21 +26,18 @@ def run(instance_id, env_config, program_args, *,
         time_warning=None,
         output_warning=(),
         output_sink=None,
-        tail_buffer_size=2 * 1024 * 1024,
+        tail_buffer_size=None,
         ):
     root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial,
                                    max_concurrent, concurrency_group, timeout, time_warning, output_warning)
 
-    output_router = None
-    if output_path:
-        output_router = OutputRouter(
-            tail_buffer=InMemoryTailBuffer(max_bytes=tail_buffer_size),
-            storages=[FileOutputStorage(output_path)])
-    elif no_output_file:
-        output_router = OutputRouter(tail_buffer=InMemoryTailBuffer(max_bytes=tail_buffer_size))
+    if no_output_storage:
+        env_config.output.storages = []
+    if tail_buffer_size is not None:
+        env_config.output.tail_buffer_size = tail_buffer_size
 
     with node.create(env_config) as env_node:
-        inst = env_node.create_instance(instance_id, root_phase, output_sink=output_sink, output_router=output_router)
+        inst = env_node.create_instance(instance_id, root_phase, output_sink=output_sink)
         _set_signal_handlers(inst, timeout_signal)
         inst.run()
 

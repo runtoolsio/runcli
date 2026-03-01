@@ -98,8 +98,7 @@ def run_job(args):
     job.run(
         instance_id, env_config, program_args,
         bypass_output=args.bypass_output,
-        no_output_file=args.no_output_file,
-        output_path=getattr(args, 'output_path'),
+        no_output_storage=args.no_output_storage,
         excl=args.excl_run,
         excl_group=getattr(args, 'excl_group'),
         checkpoint_id=checkpoint_id,
