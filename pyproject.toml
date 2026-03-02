@@ -3,20 +3,24 @@ requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "runtools-runcli"
+name = "runtoolsio-runcli"
 authors = [{name = "Stan Svec", email = "dev@stansvec.com"}]
 readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: MIT License"]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dynamic = ["version", "description"]
 dependencies = [
-#    "runtools-runner @ git+ssh://git@github.com/runtools/runjob",
+    "runtoolsio-runcore>=0.1,<0.2",
+    "runtoolsio-runjob>=0.1,<0.2",
     "rich-argparse>=1.7.0",
 ]
 
 [project.optional-dependencies]
 test = ["pytest"]
+
+[project.scripts]
+run = "runtools.runcli:main_cli"
 
 [tool.flit.module]
 name = "runtools.runcli"
