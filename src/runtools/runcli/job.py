@@ -2,6 +2,8 @@ import logging
 import signal
 from re import PatternError
 
+from runtools.runcore.db import DuplicateInstanceError
+from runtools.runcore.job import InstanceID
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, CheckpointPhase, ExecutionQueue, ConcurrencyGroup
@@ -27,6 +29,7 @@ def run(instance_id, env_config, program_args, *,
         output_warning=(),
         output_sink=None,
         tail_buffer_size=None,
+        max_reruns=0,
         ):
     root_phase = create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial,
                                    max_concurrent, concurrency_group, timeout, time_warning, output_warning)
@@ -37,9 +40,29 @@ def run(instance_id, env_config, program_args, *,
         env_config.output.tail_buffer_size = tail_buffer_size
 
     with node.create(env_config) as env_node:
-        inst = env_node.create_instance(instance_id, root_phase, output_sink=output_sink)
+        inst = _create_with_rerun_suffix(env_node, instance_id, root_phase, output_sink, max_reruns)
         _set_signal_handlers(inst, timeout_signal)
         inst.run()
+
+
+def _create_with_rerun_suffix(env_node, instance_id, root_phase, output_sink, max_reruns):
+    """Create instance, suffixing the run ID (-2, -3, ...) on duplicate up to max_reruns times."""
+    try:
+        return env_node.create_instance(instance_id, root_phase, output_sink=output_sink)
+    except DuplicateInstanceError:
+        if max_reruns <= 0:
+            raise
+
+    for suffix in range(2, max_reruns + 2):
+        rerun_id = InstanceID(instance_id.job_id, f"{instance_id.run_id}-{suffix}")
+        try:
+            inst = env_node.create_instance(rerun_id, root_phase, output_sink=output_sink)
+            logger.info("event=[rerun_suffix] run_id=[%s]", rerun_id.run_id)
+            return inst
+        except DuplicateInstanceError:
+            continue
+
+    raise DuplicateInstanceError(instance_id)
 
 
 def create_root_phase(instance_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial, max_concurrent,
