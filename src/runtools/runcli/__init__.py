@@ -128,10 +128,6 @@ def _build_output_sink(args):
                 aliases[from_key.strip()] = to_key.strip()
         parsers.append(KVParser(aliases=aliases if aliases else None))
 
-    # TODO: Add grok pattern support when implemented
-    # for pattern in getattr(args, 'grok_pattern', []):
-    #     parsers.append(GrokParser(pattern))
-
     if parsers:
         return OutputSink(ParsingPreprocessor(parsers))
     return None

@@ -150,8 +150,6 @@ def _init_job_parser(parent, subparser):
                               help='Key-value output parser is used for task tracking.')
     status_group.add_argument('--kv-alias', type=str, action='append', default=[],
                               help='Mapping of output keys to common fields.')
-    status_group.add_argument('-p', '--grok-pattern', type=str, action='append', default=[],
-                              help='Grok pattern for extracting fields from output used for task tracking.')
 
     # Timeout Control group
     timeout_group = job_parser.add_argument_group("Timeout Control")
