@@ -116,21 +116,17 @@ def run_job(args):
 
 
 def _build_output_sink(args):
-    """Build output sink from CLI arguments, with parsing preprocessor if requested."""
-    parsers = []
+    """Build output sink with KV parsing. Parsing is on by default, use --no-kv to disable."""
+    if getattr(args, 'no_kv', False):
+        return None
 
-    if getattr(args, 'kv_filter', False):
-        # Parse aliases from CLI: "count=completed" -> {'count': 'completed'}
-        aliases = {}
-        for alias_str in getattr(args, 'kv_alias', []):
-            if '=' in alias_str:
-                from_key, to_key = alias_str.split('=', 1)
-                aliases[from_key.strip()] = to_key.strip()
-        parsers.append(KVParser(aliases=aliases if aliases else None))
+    aliases = {}
+    for alias_str in getattr(args, 'kv_alias', []):
+        if '=' in alias_str:
+            from_key, to_key = alias_str.split('=', 1)
+            aliases[from_key.strip()] = to_key.strip()
 
-    if parsers:
-        return OutputSink(ParsingPreprocessor(parsers))
-    return None
+    return OutputSink(ParsingPreprocessor([KVParser(aliases=aliases if aliases else None)]))
 
 
 def load_config_and_log_setup(instance_id, args):
