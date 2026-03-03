@@ -1,6 +1,6 @@
 import logging
 import signal
-from re import PatternError
+from re import error as PatternError
 
 from runtools.runcore.db import DuplicateInstanceError
 from runtools.runcore.job import InstanceID
