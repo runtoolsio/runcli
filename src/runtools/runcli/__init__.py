@@ -10,6 +10,7 @@ from runtools.runcore import util, env
 from runtools.runcore.env import EnvironmentConfigUnion
 from runtools.runcore.util.files import format_toml
 from runtools.runcore.err import RuntoolsException
+from runtools.runcore.run import JobCompletionError
 from runtools.runcore.job import InstanceID
 from runtools.runcore.paths import ConfigFileNotFoundError
 from runtools.runcore.util import update_nested_dict
@@ -39,6 +40,9 @@ def main(args):
     """
     try:
         run_app(args)
+    except JobCompletionError as e:
+        logger.warning(f"run_unsuccessful termination=[{e.termination}]")
+        exit(1)
     except RuntoolsException as e:
         logger.error(f"run_job_command_failed reason=[{e}]")
         console.print(Text().append("User error: ", style="bold red").append(str(e)))
@@ -152,10 +156,7 @@ def load_config_and_log_setup(instance_id, args):
     if cfg_found:
         logger.info(f"configuration_loaded instance=[{instance_id}] source=[{cfg_path}]")
     else:
-        logger.warning(f"fallback_configuration_loaded instance=[{instance_id}] fallback_config=[{cfg_path}]")
-        console.print(Text().append("Note: ", style="bold yellow")
-                      .append(f"No config file found in search paths. Using built-in defaults. ")
-                      .append("Run `config create` or use `-D/--def-config` to suppress this message."))
+        logger.debug(f"fallback_configuration_loaded instance=[{instance_id}] fallback_config=[{cfg_path}]")
 
     return config
 
