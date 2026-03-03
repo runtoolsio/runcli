@@ -41,7 +41,7 @@ def main(args):
     try:
         run_app(args)
     except JobCompletionError as e:
-        logger.warning(f"run_unsuccessful termination=[{e.termination}]")
+        logger.warning(f"run_unsuccessful instance=[{e.instance_id}] termination=[{e.termination}]")
         exit(1)
     except RuntoolsException as e:
         logger.error(f"run_job_command_failed reason=[{e}]")
