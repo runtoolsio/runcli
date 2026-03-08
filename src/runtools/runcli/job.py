@@ -113,7 +113,7 @@ def _set_signal_handlers(job_instance, timeout_signal):
 
     if timeout_signal:
         if timeout_signal.isnumeric():
-            timeout_signal_number = timeout_signal
+            timeout_signal_number = int(timeout_signal)
         else:
             signal_enum = getattr(signal.Signals, timeout_signal)
             timeout_signal_number = signal_enum.value
