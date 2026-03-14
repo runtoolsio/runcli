@@ -2,8 +2,7 @@ import logging
 import signal
 from re import error as PatternError
 
-from runtools.runcore.db import DuplicateInstanceError
-from runtools.runcore.job import InstanceID
+from runtools.runcore.job import InstanceID, DuplicateInstanceError
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, CheckpointPhase, ExecutionQueue, ConcurrencyGroup
