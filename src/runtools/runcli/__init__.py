@@ -8,12 +8,12 @@ from rich.text import Text
 
 from runtools.runcore import util, env
 from runtools.runcore.env import EnvironmentConfigUnion
-from runtools.runcore.util.files import format_toml
 from runtools.runcore.err import RuntoolsException
-from runtools.runcore.run import JobCompletionError
-from runtools.runcore.job import InstanceID
+from runtools.runcore.job import InstanceID, DuplicateStrategy
 from runtools.runcore.paths import ConfigFileNotFoundError
+from runtools.runcore.run import JobCompletionError
 from runtools.runcore.util import update_nested_dict
+from runtools.runcore.util.files import format_toml
 from runtools.runcore.util.parser import KVParser
 from runtools.runjob.output import OutputSink, ParsingPreprocessor
 from . import __version__, cmd, cli, log, job
@@ -88,11 +88,19 @@ def run_env(args):
             print(f"{'─' * 30}")
 
 
+def _resolve_duplicate_strategy(args):
+    if getattr(args, 'allow_duplicate', False):
+        return DuplicateStrategy.ALLOW
+    if getattr(args, 'suppress_duplicate', False):
+        return DuplicateStrategy.SUPPRESS
+    return DuplicateStrategy.DISALLOW
+
+
 def run_job(args):
     job_id = args.id or " ".join([args.command.removeprefix('./')] + args.arg)
-    instance_id = InstanceID(job_id, getattr(args, 'run_id'))
-    config = load_config_and_log_setup(instance_id, args)
-    env_config = resolve_env_config(args, instance_id)
+    run_id = getattr(args, 'run_id')
+    config = load_config_and_log_setup(InstanceID(job_id, run_id), args)
+    env_config = resolve_env_config(args, InstanceID(job_id, run_id))
     program_args = [args.command] + args.arg
     checkpoint_id = getattr(args, 'checkpoint')
 
@@ -100,7 +108,7 @@ def run_job(args):
     output_sink = _build_output_sink(args)
 
     job.run(
-        instance_id, env_config, program_args,
+        job_id, run_id, env_config, program_args,
         bypass_output=args.bypass_output,
         no_output_storage=args.no_output_storage,
         excl=args.excl_run,
@@ -115,7 +123,7 @@ def run_job(args):
         output_warning=args.output_warn,
         output_sink=output_sink,
         tail_buffer_size=args.tail_buffer_size,
-        max_reruns=args.max_reruns,
+        duplicate_strategy=_resolve_duplicate_strategy(args),
     )
 
 
