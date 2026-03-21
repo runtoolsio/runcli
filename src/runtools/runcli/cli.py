@@ -136,8 +136,8 @@ def _init_job_parser(parent, subparser):
                               help='Disable output capturing. Program output goes directly to stdout/stderr. '
                                    'Improves compatibility with interactive programs using terminal control codes. '
                                    'Note: Disables output-based features like parsing and tracking.')
-    output_group.add_argument('--no-output-storage', action='store_true',
-                              help='Disable all output storage for this run.')
+    output_group.add_argument('--disable-output', type=str, metavar='TYPE', action='append', default=[],
+                              help='Disable output storage by type (e.g. file, s3, all). Repeatable.')
     output_group.add_argument('--output-warn', type=str, metavar='REGEX', action='append', default=[],
                               help='This enables output warning which is triggered each time an output line of the job '
                                    'matches regex specified by the value of this option. For example `--warn-output '

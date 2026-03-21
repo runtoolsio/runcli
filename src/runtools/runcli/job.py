@@ -13,9 +13,9 @@ from runtools.runjob.warning import TimeWarningExtension, OutputWarningExtension
 logger = logging.getLogger(__name__)
 
 
-def run(job_id, run_id, env_config, program_args, *,
+def run(job_id, run_id, env_id, program_args, *,
         bypass_output=False,
-        no_output_storage=False,
+        disable_output=(),
         excl=False,
         excl_group=None,
         checkpoint_id=None,
@@ -33,12 +33,7 @@ def run(job_id, run_id, env_config, program_args, *,
     root_phase = create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial,
                                    max_concurrent, concurrency_group, timeout, time_warning, output_warning)
 
-    if no_output_storage:
-        env_config.output.storages = []
-    if tail_buffer_size is not None:
-        env_config.output.tail_buffer_size = tail_buffer_size
-
-    with node.create(env_config) as env_node:
+    with node.connect(env_id, disable_output=disable_output, tail_buffer_size=tail_buffer_size) as env_node:
         inst = env_node.create_instance(
             job_id, run_id, root_phase, output_sink=output_sink, duplicate_strategy=duplicate_strategy)
         _set_signal_handlers(inst, timeout_signal)
@@ -47,6 +42,7 @@ def run(job_id, run_id, env_config, program_args, *,
 
 def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial, max_concurrent,
                       concurrency_group, timeout, time_warning, output_warning):
+    """Build the root phase tree from CLI arguments."""
     if serial and max_concurrent:
         raise ValueError("Either `serial` or `max_concurrent` can be set")
 

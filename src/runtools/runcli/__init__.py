@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.text import Text
 
 from runtools.runcore import util, env
-from runtools.runcore.env import EnvironmentConfigUnion
+from runtools.runcore.env import lookup, load_env_config, BUILTIN_LOCAL
 from runtools.runcore.err import RuntoolsException
 from runtools.runcore.job import InstanceID, DuplicateStrategy
 from runtools.runcore.paths import ConfigFileNotFoundError
@@ -77,7 +77,12 @@ def run_config(args):
 
 def run_env(args):
     all_envs = getattr(args, 'all_envs', False)
-    env_configs = env.get_env_configs().values() if all_envs else [env.get_env_config(getattr(args, 'env'))]
+    if all_envs:
+        registry = env.load_registry()
+        env_configs = [load_env_config(entry) for entry in registry.values()]
+    else:
+        entry = lookup(getattr(args, 'env', None) or BUILTIN_LOCAL)
+        env_configs = [load_env_config(entry)]
     for i, env_config in enumerate(env_configs):
         if all_envs:
             if i > 0:
@@ -100,7 +105,6 @@ def run_job(args):
     job_id = args.id or " ".join([args.command.removeprefix('./')] + args.arg)
     run_id = getattr(args, 'run_id')
     config = load_config_and_log_setup(InstanceID(job_id, run_id), args)
-    env_config = resolve_env_config(args, InstanceID(job_id, run_id))
     program_args = [args.command] + args.arg
     checkpoint_id = getattr(args, 'checkpoint')
 
@@ -108,15 +112,15 @@ def run_job(args):
     output_sink = _build_output_sink(args)
 
     job.run(
-        job_id, run_id, env_config, program_args,
+        job_id, run_id, getattr(args, 'env', None), program_args,
         bypass_output=args.bypass_output,
-        no_output_storage=args.no_output_storage,
+        disable_output=tuple(args.disable_output),
         excl=args.excl_run,
         excl_group=getattr(args, 'excl_group'),
         checkpoint_id=checkpoint_id,
         serial=args.serial,
         max_concurrent=args.max_concurrent,
-        concurrency_group=getattr(args, 'concurrency_group', ),
+        concurrency_group=getattr(args, 'concurrency_group', None),
         timeout=getattr(args, 'timeout', 0.0),
         timeout_signal=getattr(args, 'timeout_sig'),
         time_warning=getattr(args, 'time_warn'),
@@ -179,12 +183,3 @@ def configure_logging(config):
     )
 
 
-def resolve_env_config(args, instance_id) -> EnvironmentConfigUnion:
-    if eid := getattr(args, 'env'):
-        env_config = env.get_env_config(eid)
-        logger.info(f"environment_config_loaded instance=[{instance_id}] env=[{env_config.id}]")
-    else:
-        env_config = env.get_default_env_config()
-        logger.info(f"default_environment_config_loaded instance=[{instance_id}] env=[{env_config.id}]")
-
-    return env_config
