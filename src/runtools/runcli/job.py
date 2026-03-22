@@ -88,10 +88,12 @@ def _set_signal_handlers(job_instance, timeout_signal):
     signal.signal(signal.SIGTERM, term.terminate)
 
     if timeout_signal:
-        if timeout_signal.isnumeric():
-            timeout_signal_number = int(timeout_signal)
-        else:
-            signal_enum = getattr(signal.Signals, timeout_signal)
-            timeout_signal_number = signal_enum.value
+        try:
+            if timeout_signal.isnumeric():
+                timeout_signal_number = signal.Signals(int(timeout_signal)).value
+            else:
+                timeout_signal_number = signal.Signals[timeout_signal].value
+        except (KeyError, ValueError):
+            raise SystemExit(f"error: invalid signal: {timeout_signal}")
 
         signal.signal(timeout_signal_number, term.timeout)
