@@ -76,15 +76,17 @@ def configure(enabled, log_stdout_level=DEF_LEVEL_STDOUT, log_file_level=DEF_LEV
         if not isinstance(level, int):
             level = logging.getLevelName(DEF_LEVEL_FILE)
             level_error = True
-        log_file_path = expand_user(log_file_path) or (paths.log_dir(create=True) / LOG_FILENAME)
-
-        setup_file(level, log_file_path)
-
-        if level < runtools_logger.getEffectiveLevel():
-            runtools_logger.setLevel(level)
-        if level_error:
-            runtools_logger.warning(
-                f"[invalid_log_level] type=[file] level=[{log_file_level}] used_default=[{DEF_LEVEL_FILE}]")
+        try:
+            log_file_path = expand_user(log_file_path) or (paths.log_dir(create=True) / LOG_FILENAME)
+            setup_file(level, log_file_path)
+        except OSError as e:
+            print(f"WARNING: File logging disabled: {e}", file=sys.stderr)
+        else:
+            if level < runtools_logger.getEffectiveLevel():
+                runtools_logger.setLevel(level)
+            if level_error:
+                runtools_logger.warning(
+                    f"[invalid_log_level] type=[file] level=[{log_file_level}] used_default=[{DEF_LEVEL_FILE}]")
 
 
 def is_disabled():
