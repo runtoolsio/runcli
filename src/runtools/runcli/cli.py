@@ -11,7 +11,6 @@ from runtools.runcore.util.text import parse_size_to_bytes
 from . import __version__
 
 ACTION_JOB = 'job'
-ACTION_SERVICE = 'service'
 ACTION_CONFIG = 'config'
 ACTION_CONFIG_PRINT = 'print'
 ACTION_CONFIG_CREATE = 'create'
@@ -22,7 +21,7 @@ ACTION_LOG = 'log'
 def parse_args(args):
     parser = argparse.ArgumentParser(
         prog='run',
-        description='Run managed job or service',
+        description='Run managed job',
         formatter_class=RichHelpFormatter)
     parser.add_argument(
         "-V",
