@@ -6,7 +6,7 @@ import logging
 from rich.console import Console
 from rich.text import Text
 
-from runtools.runcore import util, env
+from runtools.runcore import util, env, paths
 from runtools.runcore.env import lookup, load_env_config, BUILTIN_LOCAL
 from runtools.runcore.err import RuntoolsException
 from runtools.runcore.job import InstanceID, DuplicateStrategy
@@ -18,7 +18,7 @@ from runtools.runcore.util.parser import KVParser
 from runtools.runjob.output import OutputSink, ParsingPreprocessor
 from . import __version__, cmd, cli, log, job
 from .cfg import CONFIG_FILE
-from .cli import ACTION_CONFIG, ACTION_ENV
+from .cli import ACTION_CONFIG, ACTION_ENV, ACTION_LOG
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,8 @@ def run_app(args):
         run_config(args_parsed)
     elif args_parsed.action == ACTION_ENV:
         run_env(args_parsed)
+    elif args_parsed.action == ACTION_LOG:
+        run_log()
     else:
         run_job(args_parsed)
 
@@ -91,6 +93,16 @@ def run_env(args):
         print(format_toml(env_config.model_dump(mode='json')))
         if all_envs:
             print(f"{'─' * 30}")
+
+
+def run_log():
+    config, _ = cfg.read_default_configuration()
+    try:
+        config, _ = cfg.read_configuration()
+    except ConfigFileNotFoundError:
+        pass
+    log_file_path = config.get('log', {}).get('file', {}).get('path')
+    print(paths.expand_user(log_file_path) or (paths.log_dir() / log.LOG_FILENAME))
 
 
 def _resolve_duplicate_strategy(args):

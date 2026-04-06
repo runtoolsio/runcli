@@ -16,6 +16,7 @@ ACTION_CONFIG = 'config'
 ACTION_CONFIG_PRINT = 'print'
 ACTION_CONFIG_CREATE = 'create'
 ACTION_ENV = 'env'
+ACTION_LOG = 'log'
 
 
 def parse_args(args):
@@ -35,6 +36,7 @@ def parse_args(args):
 
     _init_config_parser(subparser)
     _init_env_parser(subparser)
+    _init_log_parser(subparser)
     _init_job_parser(parent, subparser)
 
     parsed = parser.parse_args(args)
@@ -78,6 +80,15 @@ def _init_env_parser(subparser):
         formatter_class=RichHelpFormatter)
     env_parser.add_argument('-e', '--env', type=str, help='Environment ID to show. Uses default if not specified.')
     env_parser.add_argument('-a', '--all', action='store_true', dest='all_envs', help='Show all environments.')
+
+
+def _init_log_parser(subparser):
+    """Creates parser for `log` command to print the log file path."""
+    subparser.add_parser(
+        ACTION_LOG,
+        description='Print the path to the runcli log file',
+        help='Print log file path',
+        formatter_class=RichHelpFormatter)
 
 
 def _init_job_parser(parent, subparser):
