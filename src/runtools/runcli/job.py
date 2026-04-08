@@ -26,7 +26,7 @@ def run(job_id, run_id, env_id, program_args, *,
         timeout_signal=None,
         time_warning=None,
         output_warning=(),
-        output_sink=None,
+        output_processors=(),
         tail_buffer_size=None,
         duplicate_strategy=DuplicateStrategy.DISALLOW,
         ):
@@ -35,7 +35,7 @@ def run(job_id, run_id, env_id, program_args, *,
 
     with node.connect(env_id, disable_output=disable_output, tail_buffer_size=tail_buffer_size) as env_node:
         inst = env_node.create_instance(
-            job_id, run_id, root_phase, output_sink=output_sink, duplicate_strategy=duplicate_strategy)
+            job_id, run_id, root_phase, output_processors=output_processors, duplicate_strategy=duplicate_strategy)
         _set_signal_handlers(inst, timeout_signal)
         inst.run()
 

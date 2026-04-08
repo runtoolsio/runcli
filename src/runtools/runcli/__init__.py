@@ -15,7 +15,7 @@ from runtools.runcore.run import JobCompletionError
 from runtools.runcore.util import update_nested_dict
 from runtools.runcore.util.files import format_toml
 from runtools.runcore.util.parser import KVParser
-from runtools.runjob.output import OutputSink, ParsingPreprocessor
+from runtools.runjob.output import ParsingProcessor
 from . import __version__, cmd, cli, log, job
 from .cfg import CONFIG_FILE
 from .cli import ACTION_CONFIG, ACTION_ENV, ACTION_LOG
@@ -120,8 +120,7 @@ def run_job(args):
     program_args = [args.command] + args.arg
     checkpoint_id = getattr(args, 'checkpoint')
 
-    # Build output sink from CLI args (with parsing if requested)
-    output_sink = _build_output_sink(args)
+    output_processors = _build_output_processors(args)
 
     job.run(
         job_id, run_id, getattr(args, 'env', None), program_args,
@@ -137,16 +136,16 @@ def run_job(args):
         timeout_signal=getattr(args, 'timeout_sig'),
         time_warning=getattr(args, 'time_warn'),
         output_warning=args.output_warn,
-        output_sink=output_sink,
+        output_processors=output_processors,
         tail_buffer_size=args.tail_buffer_size,
         duplicate_strategy=_resolve_duplicate_strategy(args),
     )
 
 
-def _build_output_sink(args):
-    """Build output sink with KV parsing. Parsing is on by default, use --no-kv to disable."""
+def _build_output_processors(args):
+    """Build output processors with KV parsing. Parsing is on by default, use --no-kv to disable."""
     if getattr(args, 'no_kv', False):
-        return None
+        return ()
 
     aliases = {}
     for alias_str in getattr(args, 'kv_alias', []):
@@ -154,7 +153,7 @@ def _build_output_sink(args):
             from_key, to_key = alias_str.split('=', 1)
             aliases[from_key.strip()] = to_key.strip()
 
-    return OutputSink(ParsingPreprocessor([KVParser(aliases=aliases if aliases else None)]))
+    return (ParsingProcessor([KVParser(aliases=aliases if aliases else None)]),)
 
 
 def load_config_and_log_setup(instance_id, args):
