@@ -160,8 +160,10 @@ def _init_job_parser(parent, subparser):
 
     # Status Tracking group
     status_group = job_parser.add_argument_group("Status Tracking")
+    status_group.add_argument('--no-parse', action='store_true', default=False,
+                              help='Disable output parsing (JSON, log patterns, key-value).')
     status_group.add_argument('--no-kv', action='store_true', default=False,
-                              help='Disable key-value output parsing for status tracking.')
+                              dest='no_parse', help=argparse.SUPPRESS)
     status_group.add_argument('--kv-alias', type=str, action='append', default=[],
                               help='Mapping of output keys to common fields.')
 

@@ -15,7 +15,7 @@ from runtools.runcore.run import JobCompletionError
 from runtools.runcore.util import update_nested_dict
 from runtools.runcore.util.files import format_toml
 from runtools.runcore.util.parser import KVParser
-from runtools.runjob.output import ParsingProcessor
+from runtools.runjob.output import OutputParser
 from . import __version__, cmd, cli, log, job
 from .cfg import CONFIG_FILE
 from .cli import ACTION_CONFIG, ACTION_ENV, ACTION_LOG
@@ -143,8 +143,8 @@ def run_job(args):
 
 
 def _build_output_processors(args):
-    """Build output processors with KV parsing. Parsing is on by default, use --no-kv to disable."""
-    if getattr(args, 'no_kv', False):
+    """Build output processors with smart parsing. Parsing is on by default, use --no-parse to disable."""
+    if getattr(args, 'no_parse', False):
         return ()
 
     aliases = {}
@@ -153,7 +153,8 @@ def _build_output_processors(args):
             from_key, to_key = alias_str.split('=', 1)
             aliases[from_key.strip()] = to_key.strip()
 
-    return (ParsingProcessor([KVParser(aliases=aliases if aliases else None)]),)
+    kv_parser = KVParser(aliases=aliases if aliases else None)
+    return (OutputParser(kv_parser=kv_parser),)
 
 
 def load_config_and_log_setup(instance_id, args):
