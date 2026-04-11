@@ -65,7 +65,7 @@ def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, che
         try:
             phase = OutputWarningExtension(phase, output_warning)
         except PatternError as e:
-            logger.warning(f"invalid_output_warning_pattern detail=[{e}] result=[Output warning disabled]")
+            logger.warning("Invalid output warning pattern", extra={"detail": str(e)})
 
     return phase
 

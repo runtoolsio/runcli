@@ -3,8 +3,8 @@ enabled = true
 timing = false
 
 [log.stdout]
-level = "warn"
+level = "info"
 
 [log.file]
-level = "info"
+level = "debug"
 # path = "~/.cache/runtools/runcli.log"

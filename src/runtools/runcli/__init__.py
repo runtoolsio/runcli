@@ -41,10 +41,10 @@ def main(args):
     try:
         run_app(args)
     except JobCompletionError as e:
-        logger.warning(f"run_unsuccessful instance=[{e.instance_id}] termination=[{e.termination}]")
+        logger.warning("Run unsuccessful", extra={"instance": str(e.instance_id), "termination": str(e.termination)})
         exit(1)
     except RuntoolsException as e:
-        logger.error(f"run_job_command_failed reason=[{e}]")
+        logger.error("Run job command failed", extra={"reason": str(e)})
         console.print(Text().append("User error: ", style="bold red").append(str(e)))
         exit(1)
     except Exception:
@@ -178,9 +178,9 @@ def load_config_and_log_setup(instance_id, args):
     configure_logging(config)
 
     if cfg_found:
-        logger.info(f"configuration_loaded instance=[{instance_id}] source=[{cfg_path}]")
+        logger.debug("Configuration loaded", extra={"instance": str(instance_id), "source": str(cfg_path)})
     else:
-        logger.debug(f"fallback_configuration_loaded instance=[{instance_id}] fallback_config=[{cfg_path}]")
+        logger.debug("Fallback configuration loaded", extra={"instance": str(instance_id), "config": str(cfg_path)})
 
     return config
 
@@ -189,8 +189,8 @@ def configure_logging(config):
     log_config = config.get('log', {})
     log.configure(
         log_config.get('enabled', True),
-        log_config.get('stdout', {}).get('level', 'warn'),
-        log_config.get('file', {}).get('level', 'info'),
+        log_config.get('stdout', {}).get('level', log.DEF_LEVEL_STDOUT),
+        log_config.get('file', {}).get('level', log.DEF_LEVEL_FILE),
         log_config.get('file', {}).get('path', None),
     )
 
