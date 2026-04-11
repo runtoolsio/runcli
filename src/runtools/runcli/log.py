@@ -166,7 +166,7 @@ def get_console_level():
 
 
 def setup_file(level, file):
-    file_handler = logging.handlers.WatchedFileHandler(file)
+    file_handler = logging.handlers.RotatingFileHandler(file, maxBytes=5_000_000, backupCount=3)
     file_handler.set_name(FILE_HANDLER_NAME)
     try:
         file_handler.setLevel(level)
