@@ -70,16 +70,16 @@ class JsonFormatter(logging.Formatter):
     """JSON Lines formatter for structured file logging.
 
     Produces one JSON object per line with keys matching the OutputLine JSONL convention:
-    ``ts``, ``lvl``, ``logger``, ``msg``, plus any extra fields and run context.
+    ``timestamp``, ``level``, ``logger``, ``message``, plus any extra fields and run context.
     """
 
     def format(self, record):
         ts = datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(timespec='milliseconds')
         data = {
-            "ts": ts[:-6] + 'Z' if ts.endswith('+00:00') else ts,
-            "lvl": record.levelname,
+            "timestamp": ts[:-6] + 'Z' if ts.endswith('+00:00') else ts,
+            "level": record.levelname,
             "logger": record.name,
-            "msg": record.getMessage(),
+            "message": record.getMessage(),
         }
         data.update(_collect_extras(record))
         if record.exc_info and record.exc_info[1]:
