@@ -139,6 +139,10 @@ def _init_job_parser(parent, subparser):
     id_group.add_argument('--param', type=lambda p: p.split('='), action='append',
                           help="Parameters are specified in `name=value` format. They represent metadata of the "
                                "job instance and have no effect on the job execution.")
+    id_group.add_argument('--tag', type=str, action='append', default=[], metavar='TAG',
+                          help='Tag the run for filtering and grouping. Repeatable. '
+                               'Normalized to lowercase; an optional leading "#" is stripped. '
+                               'Example: `--tag nightly --tag #prod`.')
 
     # Output Options group
     output_group = job_parser.add_argument_group("Output Options")

@@ -139,6 +139,7 @@ def run_job(args):
         output_processors=output_processors,
         tail_buffer_size=args.tail_buffer_size,
         duplicate_strategy=_resolve_duplicate_strategy(args),
+        tags=tuple(getattr(args, 'tag', None) or ()),
     )
 
 

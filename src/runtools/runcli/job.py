@@ -29,13 +29,17 @@ def run(job_id, run_id, env_id, program_args, *,
         output_processors=(),
         tail_buffer_size=None,
         duplicate_strategy=DuplicateStrategy.DISALLOW,
+        tags=(),
         ):
     root_phase = create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial,
                                    max_concurrent, concurrency_group, timeout, time_warning, output_warning)
 
     with node.connect(env_id, disable_output=disable_output, tail_buffer_size=tail_buffer_size) as env_node:
         inst = env_node.create_instance(
-            job_id, run_id, root_phase, output_processors=output_processors, duplicate_strategy=duplicate_strategy)
+            job_id, run_id, root_phase,
+            output_processors=output_processors,
+            duplicate_strategy=duplicate_strategy,
+            tags=tags)
         _set_signal_handlers(inst, timeout_signal)
         inst.run()
 
