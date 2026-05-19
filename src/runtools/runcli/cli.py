@@ -139,8 +139,8 @@ def _init_job_parser(parent, subparser):
     id_group.add_argument('--param', type=lambda p: p.split('='), action='append',
                           help="Parameters are specified in `name=value` format. They represent metadata of the "
                                "job instance and have no effect on the job execution.")
-    id_group.add_argument('--tag', type=str, action='append', default=[], metavar='TAG',
-                          help='Tag the run for filtering and grouping. Repeatable. '
+    id_group.add_argument('-t', '--tag', type=str, action='append', default=[], metavar='TAG',
+                          help='Tag (label) the run for filtering and grouping. Repeatable. '
                                'Normalized to lowercase; an optional leading "#" is stripped. '
                                'Example: `--tag nightly --tag #prod`.')
 
@@ -173,7 +173,7 @@ def _init_job_parser(parent, subparser):
 
     # Timeout Control group
     timeout_group = job_parser.add_argument_group("Timeout Control")
-    timeout_group.add_argument('-t', '--timeout', type=_duration_type, metavar='DURATION',
+    timeout_group.add_argument('--timeout', type=_duration_type, metavar='DURATION',
                                help='Time after which the job will be stopped with `TIMEOUT` status.')
     timeout_group.add_argument('--timeout-sig', type=str,
                                help='Signal number or code for external stopping the job due to timeout. \n'
