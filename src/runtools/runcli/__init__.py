@@ -80,17 +80,15 @@ def run_config(args):
 def run_env(args):
     all_envs = getattr(args, 'all_envs', False)
     if all_envs:
-        registry = env.load_registry()
-        env_configs = [load_env_config(entry) for entry in registry.values()]
+        entries = list(env.load_registry().values())
     else:
-        entry = lookup(getattr(args, 'env', None) or BUILTIN_LOCAL)
-        env_configs = [load_env_config(entry)]
-    for i, env_config in enumerate(env_configs):
+        entries = [lookup(getattr(args, 'env', None) or BUILTIN_LOCAL)]
+    for i, entry in enumerate(entries):
         if all_envs:
             if i > 0:
                 print()
-            print(f"# Environment: {env_config.id}")
-        print(format_toml(env_config.model_dump(mode='json')))
+            print(f"# Environment: {entry.id}")
+        print(format_toml(load_env_config(entry).model_dump(mode='json')))
         if all_envs:
             print(f"{'─' * 30}")
 
