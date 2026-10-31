@@ -91,11 +91,12 @@ def test_dependency_not_running_terminates_job_unsatisfied(env):
     assert run.lifecycle.termination.status == TerminationStatus.UNSATISFIED
 
 
-def test_dependency_running_lets_job_run(env):
+@pytest.mark.parametrize('pattern', ['dep', 'de*'])
+def test_dependency_running_lets_job_run(env, pattern):
     dependency = _run_job('-j', 'dep', 'sleep', '60')
     try:
         _wait_for_active_run(env)
-        proc = _run_job('-j', 'dependent', '--depends-on', 'dep', 'echo', 'executed')
+        proc = _run_job('-j', 'dependent', '--depends-on', pattern, 'echo', 'executed')
         output, _ = proc.communicate(timeout=30)
     finally:
         dependency.terminate()

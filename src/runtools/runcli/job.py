@@ -5,6 +5,7 @@ from re import error as PatternError
 from runtools.runcore.job import DuplicateStrategy
 from runtools.runcore.matching import JobRunCriteria
 from runtools.runcore.run import StopReason
+from runtools.runcore.util import MatchingStrategy
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, CheckpointPhase, ExecutionQueue, ConcurrencyGroup, \
     ApprovalPhase, DependencyPhase
@@ -64,7 +65,7 @@ def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, che
     if approve_id:  # Outside the queue and mutex: a job waiting for approval holds no slot or lock
         phase = ApprovalPhase(approve_id, phase)
     if depends_on:
-        deps = [DependencyPhase(JobRunCriteria.parse(p), f'DEPENDS:{p}') for p in dict.fromkeys(depends_on)]
+        deps = [DependencyPhase(JobRunCriteria.parse(p, MatchingStrategy.FN_MATCH), f'DEPENDS:{p}') for p in dict.fromkeys(depends_on)]
         phase = SequentialPhase('DEPENDS_seq', [*deps, phase])
 
     if checkpoint_id:

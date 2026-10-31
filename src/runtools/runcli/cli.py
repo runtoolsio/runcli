@@ -192,8 +192,8 @@ def _init_job_parser(parent, subparser):
                                   'or claiming the exclusion lock.')
     coord_group.add_argument('-d', '--depends-on', metavar='PATTERN', action='append', default=[],
                              help='Terminate this job with `UNSATISFIED` status unless a job matching the pattern '
-                                  '(job ID, tag or JOB@RUN — as in taro) is running. Repeatable: each pattern '
-                                  'must be matched.')
+                                  '(job ID, tag or JOB@RUN; globs allowed, e.g. `backup-*`) is running. '
+                                  'Repeatable: each pattern must be matched.')
 
     # Concurrency Management group
     concurrency_group = job_parser.add_argument_group("Concurrency Management")
