@@ -186,7 +186,14 @@ def _init_job_parser(parent, subparser):
     coord_group.add_argument('-c', '--checkpoint', metavar='PHASE_ID',
                              help='Adds checkpoint barrier with specified ID. Job waits until resumed via API or CLI. '
                                   'Timeout or stop terminates the job.')
-    # Future options like --depends-on, --wait-for, etc. would go here
+    coord_group.add_argument('-a', '--approve', metavar='PHASE_ID',
+                             help='Runs the program only after it is approved via API or CLI '
+                                  '(`taro approve -p PHASE_ID`). The job waits for the approval before queuing '
+                                  'or claiming the exclusion lock.')
+    coord_group.add_argument('-d', '--depends-on', metavar='PATTERN', action='append', default=[],
+                             help='Terminate this job with `UNSATISFIED` status unless a job matching the pattern '
+                                  '(job ID, tag or JOB@RUN — as in taro) is running. Repeatable: each pattern '
+                                  'must be matched.')
 
     # Concurrency Management group
     concurrency_group = job_parser.add_argument_group("Concurrency Management")
@@ -198,7 +205,7 @@ def _init_job_parser(parent, subparser):
                                         'exclusion group cannot run simultaneously.')
     concurrency_group.add_argument('-s', '--serial', action='store_true', default=False,
                                    help='Run jobs one at a time. Jobs with same job ID or concurrent group ID wait in queue. '
-                                        'Unlike --no-overlap, this puts job in waiting state instead of terminating it. '
+                                        'Unlike --excl-run, this puts job in waiting state instead of terminating it. '
                                         'Shortcut for --max-concurrent 1.')
     concurrency_group.add_argument('-m', '--max-concurrent', type=int, default=0,
                                    help='Limit concurrent executions. Jobs wait in queue when limit reached. '

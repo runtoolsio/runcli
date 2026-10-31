@@ -127,6 +127,8 @@ def run_job(args):
         excl=args.excl_run,
         excl_group=getattr(args, 'excl_group'),
         checkpoint_id=checkpoint_id,
+        approve_id=args.approve,
+        depends_on=tuple(args.depends_on),
         serial=args.serial,
         max_concurrent=args.max_concurrent,
         concurrency_group=getattr(args, 'concurrency_group', None),

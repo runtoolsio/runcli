@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from runtools.runcore import connector
 from runtools.runcore.env import (
     EnvironmentEntry, EnvironmentKind, LocalEnvironmentConfig, create_environment, open_env_db,
 )
@@ -78,6 +79,56 @@ def test_killed_run_stays_active_until_marked_lost(env):
         assert db.mark_lost_runs([run.instance_id], stale_after=0) == [run.instance_id]
         [ended] = db.read_runs()
     assert ended.lifecycle.termination.status == TerminationStatus.LOST
+
+
+def test_dependency_not_running_terminates_job_unsatisfied(env):
+    proc = _run_job('-j', 'dependent', '--depends-on', 'absent', 'echo', 'executed')
+    output, _ = proc.communicate(timeout=30)
+
+    assert proc.returncode != 0, output
+    assert 'executed' not in output
+    [run] = _history(env)
+    assert run.lifecycle.termination.status == TerminationStatus.UNSATISFIED
+
+
+def test_dependency_running_lets_job_run(env):
+    dependency = _run_job('-j', 'dep', 'sleep', '60')
+    try:
+        _wait_for_active_run(env)
+        proc = _run_job('-j', 'dependent', '--depends-on', 'dep', 'echo', 'executed')
+        output, _ = proc.communicate(timeout=30)
+    finally:
+        dependency.terminate()
+        dependency.wait()
+
+    assert proc.returncode == 0, output
+    assert 'executed' in output
+
+
+def test_approved_job_runs_program(env):
+    proc = _run_job('-j', 'gated', '--approve', 'gate', 'echo', 'executed')
+    try:
+        active = _wait_for_active_run(env)
+        with connector.connect(ENV_ID) as conn:
+            _wait_for_phase_control(conn, active.instance_id, 'gate').approve()
+        output, _ = proc.communicate(timeout=30)
+    finally:
+        proc.kill()
+
+    assert proc.returncode == 0, output
+    assert 'executed' in output
+    [run] = _history(env)
+    assert run.lifecycle.termination.status == TerminationStatus.COMPLETED
+
+
+def _wait_for_phase_control(conn, instance_id, phase_id, timeout=15):
+    """The instance is persisted before its node serves it — retry until the control is reachable."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if (inst := conn.get_instance(instance_id)) and (control := inst.find_phase_control_by_id(phase_id)):
+            return control
+        time.sleep(0.2)
+    raise TimeoutError(f"Phase {phase_id} of {instance_id} never became controllable")
 
 
 def _wait_for_active_run(entry, timeout=15):

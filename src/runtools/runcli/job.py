@@ -3,9 +3,11 @@ import signal
 from re import error as PatternError
 
 from runtools.runcore.job import DuplicateStrategy
+from runtools.runcore.matching import JobRunCriteria
 from runtools.runcore.run import StopReason
 from runtools.runjob import node
-from runtools.runjob.coord import MutualExclusionPhase, CheckpointPhase, ExecutionQueue, ConcurrencyGroup
+from runtools.runjob.coord import MutualExclusionPhase, CheckpointPhase, ExecutionQueue, ConcurrencyGroup, \
+    ApprovalPhase, DependencyPhase
 from runtools.runjob.phase import TimeoutExtension, SequentialPhase
 from runtools.runjob.program import ProgramPhase
 from runtools.runjob.warning import TimeWarningExtension, OutputWarningExtension
@@ -19,6 +21,8 @@ def run(job_id, run_id, env_id, program_args, *,
         excl=False,
         excl_group=None,
         checkpoint_id=None,
+        approve_id=None,
+        depends_on=(),
         serial=False,
         max_concurrent=0,
         concurrency_group=None,
@@ -31,8 +35,9 @@ def run(job_id, run_id, env_id, program_args, *,
         duplicate_strategy=DuplicateStrategy.DISALLOW,
         tags=(),
         ):
-    root_phase = create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial,
-                                   max_concurrent, concurrency_group, timeout, time_warning, output_warning)
+    root_phase = create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, approve_id,
+                                   depends_on, serial, max_concurrent, concurrency_group, timeout, time_warning,
+                                   output_warning)
 
     with node.connect(env_id, disable_output=disable_output, tail_buffer_size=tail_buffer_size) as env_node:
         inst = env_node.create_instance(
@@ -44,8 +49,8 @@ def run(job_id, run_id, env_id, program_args, *,
         inst.run()
 
 
-def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, serial, max_concurrent,
-                      concurrency_group, timeout, time_warning, output_warning):
+def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, approve_id, depends_on,
+                      serial, max_concurrent, concurrency_group, timeout, time_warning, output_warning):
     """Build the root phase tree from CLI arguments."""
     if serial and max_concurrent:
         raise ValueError("Either `serial` or `max_concurrent` can be set")
@@ -56,6 +61,11 @@ def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, che
     if serial or max_concurrent:
         phase = ExecutionQueue(
             'QUEUE', ConcurrencyGroup(concurrency_group or job_id, max_concurrent or 1), phase)
+    if approve_id:  # Outside the queue and mutex: a job waiting for approval holds no slot or lock
+        phase = ApprovalPhase(approve_id, phase)
+    if depends_on:
+        deps = [DependencyPhase(JobRunCriteria.parse(p), f'DEPENDS:{p}') for p in dict.fromkeys(depends_on)]
+        phase = SequentialPhase('DEPENDS_seq', [*deps, phase])
 
     if checkpoint_id:
         checkpoint = CheckpointPhase(checkpoint_id)
