@@ -26,6 +26,7 @@ def run(job_id, run_id, env_id, program_args, *,
         depends_on=(),
         await_patterns=(),
         await_timeout=0.0,
+        await_future_only=False,
         serial=False,
         max_concurrent=0,
         concurrency_group=None,
@@ -39,8 +40,8 @@ def run(job_id, run_id, env_id, program_args, *,
         tags=(),
         ):
     root_phase = create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, approve_id,
-                                   depends_on, await_patterns, await_timeout, serial, max_concurrent,
-                                   concurrency_group, timeout, time_warning, output_warning)
+                                   depends_on, await_patterns, await_timeout, await_future_only, serial,
+                                   max_concurrent, concurrency_group, timeout, time_warning, output_warning)
 
     with node.connect(env_id, disable_output=disable_output, tail_buffer_size=tail_buffer_size) as env_node:
         inst = env_node.create_instance(
@@ -53,8 +54,8 @@ def run(job_id, run_id, env_id, program_args, *,
 
 
 def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, approve_id, depends_on,
-                      await_patterns, await_timeout, serial, max_concurrent, concurrency_group, timeout, time_warning,
-                      output_warning):
+                      await_patterns, await_timeout, await_future_only, serial, max_concurrent, concurrency_group,
+                      timeout, time_warning, output_warning):
     """Build the root phase tree from CLI arguments."""
     if serial and max_concurrent:
         raise ValueError("Either `serial` or `max_concurrent` can be set")
@@ -74,7 +75,8 @@ def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, che
     if await_patterns:  # Before the dependency check, so it sees the state after the wait
         awaited = [criteria().pattern(p, MatchingStrategy.FN_MATCH).reached_stage(Stage.ENDED).build()
                    for p in await_patterns]
-        phase = SequentialPhase('AWAIT_seq', [AwaitPhase(*awaited, timeout=await_timeout), phase])
+        await_phase = AwaitPhase(*awaited, timeout=await_timeout, search_past=not await_future_only)
+        phase = SequentialPhase('AWAIT_seq', [await_phase, phase])
 
     if checkpoint_id:
         checkpoint = CheckpointPhase(checkpoint_id)

@@ -202,6 +202,9 @@ def _init_job_parser(parent, subparser):
                                   'queuing or claiming the exclusion lock.')
     coord_group.add_argument('--await-timeout', type=_duration_type, metavar='DURATION', default=0.0,
                              help='Terminate the job with `TIMEOUT` status if `--await` is not satisfied in time.')
+    coord_group.add_argument('--await-future-only', action='store_true', default=False,
+                             help='Count only runs that end after this job starts waiting: skip history '
+                                  '(like `taro wait --future-only`).')
 
     # Concurrency Management group
     concurrency_group = job_parser.add_argument_group("Concurrency Management")

@@ -147,6 +147,32 @@ def test_await_waits_for_running_job_to_end(env):
            < runs['second'].termination.terminated_at
 
 
+def test_await_future_only_ignores_ended_run(env):
+    _run_job('-j', 'first', '-r', 'b1', 'true').communicate(timeout=30)
+
+    proc = _run_job('-j', 'second', '--await', 'first@b1', '--await-future-only', '--await-timeout', '1',
+                    'echo', 'executed')
+    output, _ = proc.communicate(timeout=30)
+
+    assert proc.returncode != 0, output
+    assert 'executed' not in output
+    runs = {run.job_id: run.lifecycle for run in _history(env)}
+    assert runs['second'].termination.status == TerminationStatus.TIMEOUT
+
+
+def test_await_future_only_waits_for_running_job_to_end(env):
+    first = _run_job('-j', 'first', '-r', 'b1', 'sleep', '2')
+    try:
+        _wait_for_active_run(env)
+        proc = _run_job('-j', 'second', '--await', 'first@b1', '--await-future-only', 'echo', 'executed')
+        output, _ = proc.communicate(timeout=30)
+    finally:
+        first.kill()
+
+    assert proc.returncode == 0, output
+    assert 'executed' in output
+
+
 def test_await_timeout_terminates_job(env):
     proc = _run_job('-j', 'second', '--await', 'absent', '--await-timeout', '1', 'echo', 'executed')
     output, _ = proc.communicate(timeout=30)

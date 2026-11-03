@@ -131,6 +131,7 @@ def run_job(args):
         depends_on=tuple(args.depends_on),
         await_patterns=tuple(args.await_patterns),
         await_timeout=args.await_timeout,
+        await_future_only=args.await_future_only,
         serial=args.serial,
         max_concurrent=args.max_concurrent,
         concurrency_group=getattr(args, 'concurrency_group', None),
