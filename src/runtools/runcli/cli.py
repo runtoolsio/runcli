@@ -194,6 +194,14 @@ def _init_job_parser(parent, subparser):
                              help='Terminate this job with `UNSATISFIED` status unless a job matching the pattern '
                                   '(job ID, tag or JOB@RUN; globs allowed, e.g. `backup-*`) is running. '
                                   'Repeatable: each pattern must be matched.')
+    coord_group.add_argument('-w', '--await', dest='await_patterns', metavar='PATTERN', action='append', default=[],
+                             help='Wait until a job matching the pattern has ended, with any outcome — like '
+                                  '`taro wait`. Runs that already ended count, so name the run to wait for: '
+                                  'e.g. `--await JOB@RUN_ID` with a run ID shared by both jobs (such as the date). '
+                                  'Repeatable: each pattern must be matched by a distinct run. The job waits before '
+                                  'queuing or claiming the exclusion lock.')
+    coord_group.add_argument('--await-timeout', type=_duration_type, metavar='DURATION', default=0.0,
+                             help='Terminate the job with `TIMEOUT` status if `--await` is not satisfied in time.')
 
     # Concurrency Management group
     concurrency_group = job_parser.add_argument_group("Concurrency Management")

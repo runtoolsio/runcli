@@ -3,12 +3,12 @@ import signal
 from re import error as PatternError
 
 from runtools.runcore.job import DuplicateStrategy
-from runtools.runcore.matching import JobRunCriteria
-from runtools.runcore.run import StopReason
+from runtools.runcore.matching import JobRunCriteria, criteria
+from runtools.runcore.run import Stage, StopReason
 from runtools.runcore.util import MatchingStrategy
 from runtools.runjob import node
 from runtools.runjob.coord import MutualExclusionPhase, CheckpointPhase, ExecutionQueue, ConcurrencyGroup, \
-    ApprovalPhase, DependencyPhase
+    ApprovalPhase, DependencyPhase, AwaitPhase
 from runtools.runjob.phase import TimeoutExtension, SequentialPhase
 from runtools.runjob.program import ProgramPhase
 from runtools.runjob.warning import TimeWarningExtension, OutputWarningExtension
@@ -24,6 +24,8 @@ def run(job_id, run_id, env_id, program_args, *,
         checkpoint_id=None,
         approve_id=None,
         depends_on=(),
+        await_patterns=(),
+        await_timeout=0.0,
         serial=False,
         max_concurrent=0,
         concurrency_group=None,
@@ -37,8 +39,8 @@ def run(job_id, run_id, env_id, program_args, *,
         tags=(),
         ):
     root_phase = create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, approve_id,
-                                   depends_on, serial, max_concurrent, concurrency_group, timeout, time_warning,
-                                   output_warning)
+                                   depends_on, await_patterns, await_timeout, serial, max_concurrent,
+                                   concurrency_group, timeout, time_warning, output_warning)
 
     with node.connect(env_id, disable_output=disable_output, tail_buffer_size=tail_buffer_size) as env_node:
         inst = env_node.create_instance(
@@ -51,7 +53,8 @@ def run(job_id, run_id, env_id, program_args, *,
 
 
 def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, checkpoint_id, approve_id, depends_on,
-                      serial, max_concurrent, concurrency_group, timeout, time_warning, output_warning):
+                      await_patterns, await_timeout, serial, max_concurrent, concurrency_group, timeout, time_warning,
+                      output_warning):
     """Build the root phase tree from CLI arguments."""
     if serial and max_concurrent:
         raise ValueError("Either `serial` or `max_concurrent` can be set")
@@ -65,8 +68,13 @@ def create_root_phase(job_id, program_args, bypass_output, excl, excl_group, che
     if approve_id:  # Outside the queue and mutex: a job waiting for approval holds no slot or lock
         phase = ApprovalPhase(approve_id, phase)
     if depends_on:
-        deps = [DependencyPhase(JobRunCriteria.parse(p, MatchingStrategy.FN_MATCH), f'DEPENDS:{p}') for p in dict.fromkeys(depends_on)]
+        deps = [DependencyPhase(JobRunCriteria.parse(p, MatchingStrategy.FN_MATCH), f'DEPENDS:{p}')
+                for p in dict.fromkeys(depends_on)]
         phase = SequentialPhase('DEPENDS_seq', [*deps, phase])
+    if await_patterns:  # Before the dependency check, so it sees the state after the wait
+        awaited = [criteria().pattern(p, MatchingStrategy.FN_MATCH).reached_stage(Stage.ENDED).build()
+                   for p in await_patterns]
+        phase = SequentialPhase('AWAIT_seq', [AwaitPhase(*awaited, timeout=await_timeout), phase])
 
     if checkpoint_id:
         checkpoint = CheckpointPhase(checkpoint_id)

@@ -122,6 +122,41 @@ def test_approved_job_runs_program(env):
     assert run.lifecycle.termination.status == TerminationStatus.COMPLETED
 
 
+def test_await_satisfied_by_ended_run(env):
+    _run_job('-j', 'first', '-r', 'b1', 'true').communicate(timeout=30)
+
+    proc = _run_job('-j', 'second', '--await', 'first@b1', 'echo', 'executed')
+    output, _ = proc.communicate(timeout=30)
+
+    assert proc.returncode == 0, output
+    assert 'executed' in output
+
+
+def test_await_waits_for_running_job_to_end(env):
+    first = _run_job('-j', 'first', '-r', 'b1', 'sleep', '2')
+    try:
+        _wait_for_active_run(env)
+        proc = _run_job('-j', 'second', '--await', 'fir*@b1', 'echo', 'executed')
+        output, _ = proc.communicate(timeout=30)
+    finally:
+        first.kill()
+
+    assert proc.returncode == 0, output
+    runs = {run.job_id: run.lifecycle for run in _history(env)}
+    assert runs['second'].created_at < runs['first'].termination.terminated_at \
+           < runs['second'].termination.terminated_at
+
+
+def test_await_timeout_terminates_job(env):
+    proc = _run_job('-j', 'second', '--await', 'absent', '--await-timeout', '1', 'echo', 'executed')
+    output, _ = proc.communicate(timeout=30)
+
+    assert proc.returncode != 0, output
+    assert 'executed' not in output
+    [run] = _history(env)
+    assert run.lifecycle.termination.status == TerminationStatus.TIMEOUT
+
+
 def _wait_for_phase_control(conn, instance_id, phase_id, timeout=15):
     """The instance is persisted before its node serves it — retry until the control is reachable."""
     deadline = time.monotonic() + timeout

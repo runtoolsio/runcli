@@ -129,6 +129,8 @@ def run_job(args):
         checkpoint_id=checkpoint_id,
         approve_id=args.approve,
         depends_on=tuple(args.depends_on),
+        await_patterns=tuple(args.await_patterns),
+        await_timeout=args.await_timeout,
         serial=args.serial,
         max_concurrent=args.max_concurrent,
         concurrency_group=getattr(args, 'concurrency_group', None),
