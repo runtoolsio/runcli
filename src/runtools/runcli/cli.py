@@ -77,7 +77,9 @@ def _init_env_parser(subparser):
         description='Show resolved environment configuration',
         help='Show resolved environment configuration',
         formatter_class=RichHelpFormatter)
-    env_parser.add_argument('-e', '--env', type=str, help='Environment ID to show. Uses default if not specified.')
+    env_parser.add_argument('-e', '--env', type=str,
+                            help='Environment ID to show. Defaults to the built-in `local`, with a warning when other '
+                                 'environments are registered.')
     env_parser.add_argument('-a', '--all', action='store_true', dest='all_envs', help='Show all environments.')
 
 
@@ -118,7 +120,8 @@ def _init_job_parser(parent, subparser):
 
     # Environment option
     job_parser.add_argument('-e', '--env', type=str,
-                            help="Environment ID where job will run. Uses default from config if not specified.")
+                            help="Environment ID where job will run. Defaults to the built-in `local`, with a warning "
+                                 "when other environments are registered.")
 
     # Identification & Metadata group
     id_group = job_parser.add_argument_group("Identification & Metadata")

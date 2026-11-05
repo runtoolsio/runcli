@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.text import Text
 
 from runtools.runcore import util, env, paths
-from runtools.runcore.env import lookup, load_env_config, BUILTIN_LOCAL
+from runtools.runcore.env import lookup, load_env_config, available_environments, BUILTIN_LOCAL
 from runtools.runcore.err import RuntoolsException
 from runtools.runcore.job import InstanceID, DuplicateStrategy
 from runtools.runcore.paths import ConfigFileNotFoundError
@@ -82,7 +82,7 @@ def run_env(args):
     if all_envs:
         entries = list(env.load_registry().values())
     else:
-        entries = [lookup(getattr(args, 'env', None) or BUILTIN_LOCAL)]
+        entries = [lookup(_resolve_env_id(getattr(args, 'env', None)))]
     for i, entry in enumerate(entries):
         if all_envs:
             if i > 0:
@@ -103,6 +103,21 @@ def run_log():
     print(paths.expand_user(log_file_path) or (paths.log_dir() / log.LOG_FILENAME))
 
 
+def _resolve_env_id(env_id):
+    """The environment selected by -e, else the built-in `local`.
+
+    Without -e, other registered environments get a warning rather than an error, because registering an environment
+    must not break existing jobs running in `local`. Unlike taro, never prompt: stdin belongs to the job.
+    """
+    if env_id:
+        return env_id
+    if others := [entry.id for entry in available_environments() if entry.id != BUILTIN_LOCAL]:
+        console.print(Text().append("Warning: ", style="bold yellow").append(
+            f"running in the built-in `local` environment — also registered: {', '.join(others)}. "
+            f"Use -e to choose one."))
+    return BUILTIN_LOCAL
+
+
 def _resolve_duplicate_strategy(args):
     if getattr(args, 'allow_duplicate', False):
         return DuplicateStrategy.ALLOW
@@ -115,13 +130,14 @@ def run_job(args):
     job_id = args.id or " ".join([args.command.removeprefix('./')] + args.arg)
     run_id = getattr(args, 'run_id')
     config = load_config_and_log_setup(InstanceID(job_id, run_id), args)
+    env_id = _resolve_env_id(getattr(args, 'env', None))
     program_args = [args.command] + args.arg
     checkpoint_id = getattr(args, 'checkpoint')
 
     output_processors = _build_output_processors(args)
 
     job.run(
-        job_id, run_id, getattr(args, 'env', None), program_args,
+        job_id, run_id, env_id, program_args,
         bypass_output=args.bypass_output,
         disable_output=tuple(args.disable_output),
         excl=args.excl_run,
